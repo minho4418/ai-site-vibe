@@ -27,7 +27,7 @@ const blackHanSans = Black_Han_Sans({
 export const metadata: Metadata = {
   title: "AI 뉴스 — 한국 개발자를 위한 AI 큐레이션",
   description:
-    "AI·개발툴·실무·창업·공모전까지, 한국 개발자에게 유용한 AI 소식을 매시간 자동 큐레이션합니다.",
+    "AI·개발툴·실무·창업·공모전까지, 한국 개발자에게 유용한 AI 소식을 매일 오전 8시에 자동 큐레이션합니다.",
 };
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {

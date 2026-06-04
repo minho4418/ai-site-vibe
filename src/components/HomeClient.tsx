@@ -98,7 +98,7 @@ export function HomeClient({ articles, usingMock }: Props) {
                 <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-white/80" />
                 <span className="relative inline-flex h-2 w-2 rounded-full bg-white" />
               </span>
-              매시간 자동 업데이트
+              매일 오전 8시 자동 업데이트
             </span>
             <h1 className="font-display text-5xl leading-[0.95] tracking-tight text-white sm:text-7xl">
               AI 뉴스
@@ -149,7 +149,7 @@ export function HomeClient({ articles, usingMock }: Props) {
       </main>
 
       <footer className="mx-auto max-w-6xl px-4 pb-10 pt-6 text-center text-xs font-medium text-zinc-500 dark:text-zinc-500">
-        한국 개발자를 위한 AI 큐레이션 · RSS 기반 · 매시간 업데이트
+        한국 개발자를 위한 AI 큐레이션 · RSS 기반 · 매일 오전 8시 업데이트
       </footer>
     </div>
   );
