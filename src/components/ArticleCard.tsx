@@ -1,6 +1,6 @@
 "use client";
 
-import { CATEGORY_COLORS } from "@/lib/categories";
+import { CATEGORY_COLORS, CATEGORY_LABELS } from "@/lib/categories";
 import { timeAgo } from "@/lib/time";
 import type { Article } from "@/lib/types";
 
@@ -59,7 +59,7 @@ export function ArticleCard({
             categoryClasses
           }
         >
-          {article.category}
+          {CATEGORY_LABELS[article.category] ?? article.category}
         </span>
       </a>
 

@@ -1,5 +1,6 @@
 import Parser from "rss-parser";
 
+import { classifyCategory, isAiRelated } from "@/lib/categorize";
 import { FEEDS } from "@/lib/feeds";
 import { extractSummary, extractThumbnail, normalizeUrl } from "@/lib/rss-extract";
 import { getSupabaseServiceServer } from "@/lib/supabase-server";
@@ -52,13 +53,21 @@ export async function GET(request: Request) {
       const limit = feed.limit ?? 15;
       const rows = parsed.items
         .filter((item) => item.link && item.title)
-        .slice(0, limit)
         .map((item) => ({
-          url: normalizeUrl(item.link!),
+          item,
           title: item.title!.trim(),
-          source: feed.source,
-          category: feed.category,
           summary: extractSummary(item.contentSnippet ?? item.content ?? ""),
+        }))
+        // 종합 피드(aiOnly)는 AI 관련 글만 남긴다. slice 보다 먼저 걸러야 limit 개를 채운다.
+        .filter(({ title, summary }) => !feed.aiOnly || isAiRelated(`${title} ${summary}`))
+        .slice(0, limit)
+        .map(({ item, title, summary }) => ({
+          url: normalizeUrl(item.link!),
+          title,
+          source: feed.source,
+          // 키워드로 카테고리를 재분류, 실패 시 피드 기본값 사용.
+          category: classifyCategory(`${title} ${summary}`) ?? feed.category,
+          summary,
           thumbnail_url: extractThumbnail(item),
           published_at:
             item.isoDate ?? (item.pubDate ? new Date(item.pubDate).toISOString() : new Date().toISOString()),

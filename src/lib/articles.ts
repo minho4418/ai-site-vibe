@@ -6,7 +6,7 @@ import { getSupabaseAnonServer } from "./supabase-server";
 import type { Article } from "./types";
 
 const CATEGORY_SET = new Set<string>(CATEGORIES.filter((c) => c.id !== "all").map((c) => c.id));
-const FALLBACK_CATEGORY: Article["category"] = "Industry";
+const FALLBACK_CATEGORY: Article["category"] = "LLM";
 
 function normalizeCategory(raw: string): Article["category"] {
   return (CATEGORY_SET.has(raw) ? raw : FALLBACK_CATEGORY) as Article["category"];
