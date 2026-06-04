@@ -1,8 +1,23 @@
 "use client";
 
+import { useState } from "react";
+
 import { CATEGORY_COLORS, CATEGORY_LABELS } from "@/lib/categories";
 import { timeAgo } from "@/lib/time";
 import type { Article } from "@/lib/types";
+
+// 썸네일이 없을 때 보여줄 카테고리별 그라데이션 대체 이미지.
+const CATEGORY_GRADIENTS: Record<Article["category"], string> = {
+  Tools: "from-violet-500 via-purple-500 to-fuchsia-600",
+  LLM: "from-sky-500 via-blue-500 to-indigo-600",
+  Practice: "from-emerald-500 via-teal-500 to-cyan-600",
+  Career: "from-amber-500 via-orange-500 to-rose-500",
+};
+
+// "AI 코딩툴 (Google뉴스)" → "AI 코딩툴" 처럼 대체 이미지에 쓸 짧은 소스명.
+function cleanSource(source: string): string {
+  return source.replace(/\s*\((?:via\s+)?Google\s*(?:News|뉴스)\)\s*/i, "").trim() || source;
+}
 
 type Props = {
   article: Article;
@@ -24,6 +39,10 @@ export function ArticleCard({
   onToggleBookmark,
 }: Props) {
   const categoryClasses = CATEGORY_COLORS[article.category];
+  const gradient = CATEGORY_GRADIENTS[article.category] ?? CATEGORY_GRADIENTS.LLM;
+  // 썸네일 URL 이 없거나, 있더라도 로딩에 실패하면(핫링크 차단·404 등) 그라데이션 대체 이미지를 쓴다.
+  const [imgFailed, setImgFailed] = useState(false);
+  const showImage = Boolean(article.thumbnail_url) && !imgFailed;
   // article.likes_count 는 SSR 시점의 DB 값. liked 가 true 라면 그 사용자의 좋아요가 이미 포함돼 있으므로 +1 더하지 않는다.
   // 클릭 직후엔 use-likes 가 낙관적 override 를 미리 채워주므로 UI 도 즉시 반영됨.
   const displayLikes = likesOverride ?? article.likes_count;
@@ -36,21 +55,39 @@ export function ArticleCard({
         rel="noopener noreferrer"
         className="relative block aspect-[16/9] overflow-hidden bg-zinc-100 dark:bg-zinc-800"
       >
-        {article.thumbnail_url ? (
+        {showImage ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img
-            src={article.thumbnail_url}
+            src={article.thumbnail_url!}
             alt=""
             loading="lazy"
+            onError={() => setImgFailed(true)}
             className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-[1.03]"
           />
         ) : (
-          <div className="flex h-full w-full items-center justify-center text-zinc-300 dark:text-zinc-600">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="h-10 w-10">
-              <rect x="3" y="3" width="18" height="18" rx="2" />
-              <circle cx="8.5" cy="8.5" r="1.5" />
-              <path d="m21 15-5-5L5 21" />
+          <div
+            className={
+              "relative flex h-full w-full flex-col items-center justify-center gap-2 bg-gradient-to-br p-4 text-center transition-transform duration-300 group-hover:scale-[1.03] " +
+              gradient
+            }
+          >
+            {/* 은은한 광택 오버레이 */}
+            <span
+              aria-hidden="true"
+              className="pointer-events-none absolute inset-0 [background:radial-gradient(120%_80%_at_15%_10%,rgba(255,255,255,0.35),transparent_55%)]"
+            />
+            <svg
+              viewBox="0 0 24 24"
+              fill="currentColor"
+              className="h-7 w-7 text-white/90 drop-shadow"
+              aria-hidden="true"
+            >
+              <path d="M12 2l1.8 5.2L19 9l-5.2 1.8L12 16l-1.8-5.2L5 9l5.2-1.8L12 2z" />
+              <path d="M19 14l.9 2.6L22.5 17.5l-2.6.9L19 21l-.9-2.6-2.6-.9 2.6-.9L19 14z" opacity="0.8" />
             </svg>
+            <span className="line-clamp-2 text-sm font-semibold text-white drop-shadow-sm">
+              {cleanSource(article.source)}
+            </span>
           </div>
         )}
         <span
