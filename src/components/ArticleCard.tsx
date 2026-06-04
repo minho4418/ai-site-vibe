@@ -50,7 +50,7 @@ export function ArticleCard({
   const displayLikes = likesOverride ?? article.likes_count;
 
   return (
-    <article className="group flex flex-col overflow-hidden rounded-xl border border-zinc-200 bg-white shadow-[0_1px_2px_-1px_rgba(15,23,42,0.06)] transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_8px_24px_-8px_rgba(15,23,42,0.18)] dark:border-zinc-800 dark:bg-zinc-900 dark:hover:shadow-[0_8px_24px_-8px_rgba(0,0,0,0.6)]">
+    <article className="group flex flex-col overflow-hidden rounded-2xl border-2 border-zinc-900/10 bg-white shadow-[0_2px_10px_-4px_rgba(15,23,42,0.1)] transition-all duration-200 hover:-translate-y-1 hover:border-zinc-900/20 hover:shadow-[0_18px_40px_-14px_rgba(124,58,237,0.4)] dark:border-white/10 dark:bg-zinc-900/70 dark:hover:border-white/20 dark:hover:shadow-[0_18px_40px_-14px_rgba(0,0,0,0.7)]">
       <a
         href={article.url}
         target="_blank"
