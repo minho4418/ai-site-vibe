@@ -58,7 +58,7 @@ security definer
 set search_path = public
 as $$
 declare
-  v_inserted boolean;
+  v_inserted integer;
   v_count    integer;
 begin
   insert into public.likes (device_id, article_id)
@@ -67,9 +67,40 @@ begin
 
   get diagnostics v_inserted = row_count;
 
-  if v_inserted then
+  if v_inserted > 0 then
     update public.articles
        set likes_count = likes_count + 1
+     where id = p_article_id
+    returning likes_count into v_count;
+  else
+    select likes_count into v_count
+      from public.articles
+     where id = p_article_id;
+  end if;
+
+  return v_count;
+end;
+$$;
+
+create or replace function public.decrement_likes(p_article_id uuid, p_device_id text)
+returns integer
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  v_deleted integer;
+  v_count   integer;
+begin
+  delete from public.likes
+   where device_id = p_device_id
+     and article_id = p_article_id;
+
+  get diagnostics v_deleted = row_count;
+
+  if v_deleted > 0 then
+    update public.articles
+       set likes_count = greatest(0, likes_count - 1)
      where id = p_article_id
     returning likes_count into v_count;
   else
@@ -98,6 +129,7 @@ drop policy if exists "bookmarks_write" on public.bookmarks;
 drop policy if exists "bookmarks_drop"  on public.bookmarks;
 drop policy if exists "likes_read"      on public.likes;
 drop policy if exists "likes_write"     on public.likes;
+drop policy if exists "likes_drop"      on public.likes;
 
 create policy "articles_read"   on public.articles   for select using (true);
 create policy "bookmarks_read"  on public.bookmarks  for select using (true);
@@ -105,6 +137,7 @@ create policy "bookmarks_write" on public.bookmarks  for insert with check (true
 create policy "bookmarks_drop"  on public.bookmarks  for delete using (true);
 create policy "likes_read"      on public.likes      for select using (true);
 create policy "likes_write"     on public.likes      for insert with check (true);
+create policy "likes_drop"      on public.likes      for delete using (true);
 
 -- ──────────────────────────────────────────────────────────────────────────
 -- 6. anon role 권한
@@ -112,5 +145,6 @@ create policy "likes_write"     on public.likes      for insert with check (true
 grant usage   on schema public to anon;
 grant select  on public.articles  to anon;
 grant select, insert, delete on public.bookmarks to anon;
-grant select, insert on public.likes to anon;
+grant select, insert, delete on public.likes to anon;
 grant execute on function public.increment_likes(uuid, text) to anon;
+grant execute on function public.decrement_likes(uuid, text) to anon;

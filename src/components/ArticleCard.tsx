@@ -10,7 +10,7 @@ type Props = {
   bookmarked: boolean;
   hydrated: boolean;
   likesOverride?: number;
-  onToggleLike: (id: string) => void;
+  onToggleLike: (id: string, currentCount: number) => void;
   onToggleBookmark: (id: string) => void;
 };
 
@@ -24,7 +24,9 @@ export function ArticleCard({
   onToggleBookmark,
 }: Props) {
   const categoryClasses = CATEGORY_COLORS[article.category];
-  const displayLikes = likesOverride ?? article.likes_count + (liked ? 1 : 0);
+  // article.likes_count 는 SSR 시점의 DB 값. liked 가 true 라면 그 사용자의 좋아요가 이미 포함돼 있으므로 +1 더하지 않는다.
+  // 클릭 직후엔 use-likes 가 낙관적 override 를 미리 채워주므로 UI 도 즉시 반영됨.
+  const displayLikes = likesOverride ?? article.likes_count;
 
   return (
     <article className="group flex flex-col overflow-hidden rounded-xl border border-zinc-200 bg-white shadow-[0_1px_2px_-1px_rgba(15,23,42,0.06)] transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_8px_24px_-8px_rgba(15,23,42,0.18)] dark:border-zinc-800 dark:bg-zinc-900 dark:hover:shadow-[0_8px_24px_-8px_rgba(0,0,0,0.6)]">
@@ -88,7 +90,7 @@ export function ArticleCard({
         >
           <button
             type="button"
-            onClick={() => onToggleLike(article.id)}
+            onClick={() => onToggleLike(article.id, displayLikes)}
             disabled={!hydrated}
             tabIndex={hydrated ? 0 : -1}
             aria-pressed={liked}
