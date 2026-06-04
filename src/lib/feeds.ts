@@ -19,9 +19,12 @@ const googleNewsKR = (query: string) =>
 // 여기 category 값은 키워드에 안 걸릴 때의 fallback 일 뿐이다.
 // URL이 죽으면 ingest 라우트가 그 피드만 스킵하고 계속 진행함.
 export const FEEDS: FeedSource[] = [
-  // ── 한국 개발자 커뮤니티 (AI 관련 글만 필터링) ───────────────────────
+  // ── 한국 개발자/스타트업 커뮤니티 (AI 관련 글만 필터링) ────────────────
   { url: "https://news.hada.io/rss/news", source: "GeekNews", category: "Practice", aiOnly: true, limit: 30 },
   { url: "https://yozm.wishket.com/magazine/feed/", source: "요즘IT", category: "Practice", aiOnly: true, limit: 15 },
+  // 벤처스퀘어: 한국 스타트업 전문 매체. 투자·창업·아이디어톤/경진대회 소식이 많아
+  // 창업(Startup)·공모전(Contest) 카테고리를 채운다. aiOnly 로 AI 관련 글만 수집.
+  { url: "https://www.venturesquare.net/feed", source: "벤처스퀘어", category: "Startup", aiOnly: true, limit: 20 },
 
   // ── 한국어 AI 뉴스 (Google News 검색, 카테고리별 키워드 스코프) ──────
   {
@@ -55,7 +58,7 @@ export const FEEDS: FeedSource[] = [
     limit: 10,
   },
   {
-    url: googleNewsKR('"AI 공모전" OR "개발 공모전" OR 해커톤 OR "AI 경진대회" OR "개발자 챌린지" OR 캐글'),
+    url: googleNewsKR('"AI 공모전" OR "개발 공모전" OR 해커톤 OR 아이디어톤 OR "AI 경진대회" OR "개발자 챌린지" OR 캐글'),
     source: "공모전·해커톤 (Google뉴스)",
     category: "Contest",
     limit: 10,
