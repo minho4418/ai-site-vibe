@@ -1,11 +1,12 @@
 "use client";
 
-import { useDeferredValue, useMemo, useState } from "react";
+import { useDeferredValue, useEffect, useMemo, useState } from "react";
 
 import { ArticleCard } from "@/components/ArticleCard";
 import { CategoryFilter } from "@/components/CategoryFilter";
 import { SearchInput } from "@/components/SearchInput";
 import { ThemeToggle } from "@/components/ThemeToggle";
+import { fetchArticlesByIds } from "@/lib/articles-client";
 import type { CategoryId } from "@/lib/categories";
 import type { Article } from "@/lib/types";
 import { useBookmarks } from "@/lib/use-bookmarks";
@@ -34,9 +35,41 @@ export function HomeClient({ articles, usingMock }: Props) {
     return c;
   }, [articles]);
 
+  // 최신 60개에 들어있는 기사 id 집합.
+  const articleIds = useMemo(() => new Set(articles.map((a) => a.id)), [articles]);
+
+  // 북마크했지만 최신 60개 밖으로 밀려난 기사들 — 북마크 보기를 켤 때만 id 로 추가 조회.
+  const [bookmarkedExtras, setBookmarkedExtras] = useState<Article[]>([]);
+
+  useEffect(() => {
+    if (!showBookmarksOnly || !bookmarksHydrated) return;
+    const have = new Set([...articleIds, ...bookmarkedExtras.map((a) => a.id)]);
+    const missing = [...bookmarkedSet].filter((id) => !have.has(id));
+    if (missing.length === 0) return;
+
+    let cancelled = false;
+    fetchArticlesByIds(missing).then((rows) => {
+      if (cancelled || rows.length === 0) return;
+      setBookmarkedExtras((prev) => {
+        const seen = new Set(prev.map((a) => a.id));
+        return [...prev, ...rows.filter((r) => !seen.has(r.id))];
+      });
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [showBookmarksOnly, bookmarksHydrated, bookmarkedSet, articleIds, bookmarkedExtras]);
+
+  // 북마크 보기에서는 (최신 60개 + 추가로 가져온 북마크 기사)를, 그 외엔 최신 60개만 사용.
+  const source = useMemo(() => {
+    if (!showBookmarksOnly || bookmarkedExtras.length === 0) return articles;
+    const extra = bookmarkedExtras.filter((a) => !articleIds.has(a.id));
+    return [...articles, ...extra];
+  }, [showBookmarksOnly, articles, bookmarkedExtras, articleIds]);
+
   const filtered = useMemo(() => {
     const q = deferredQuery.trim().toLowerCase();
-    return articles.filter((a) => {
+    return source.filter((a) => {
       if (category !== "all" && a.category !== category) return false;
       if (showBookmarksOnly && !bookmarkedSet.has(a.id)) return false;
       if (!q) return true;
@@ -46,7 +79,7 @@ export function HomeClient({ articles, usingMock }: Props) {
         a.source.toLowerCase().includes(q)
       );
     });
-  }, [articles, category, deferredQuery, showBookmarksOnly, bookmarkedSet]);
+  }, [source, category, deferredQuery, showBookmarksOnly, bookmarkedSet]);
 
   return (
     <div className="min-h-dvh text-zinc-900 dark:text-zinc-100">
