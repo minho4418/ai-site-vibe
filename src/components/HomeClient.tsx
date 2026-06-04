@@ -84,7 +84,7 @@ export function HomeClient({ articles, usingMock }: Props) {
   return (
     <div className="min-h-dvh text-zinc-900 dark:text-zinc-100">
       <header className="sticky top-0 z-30 border-b border-zinc-900/10 bg-[#FBF6EC]/80 backdrop-blur-md dark:border-white/10 dark:bg-[#0d0b14]/80">
-        <div className="mx-auto flex max-w-6xl flex-col gap-3 px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
+        <div className="mx-auto flex max-w-6xl select-none flex-col gap-3 px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex items-center gap-2.5">
             <div className="grain relative flex h-9 w-9 items-center justify-center overflow-hidden rounded-xl bg-gradient-to-br from-fuchsia-500 via-purple-500 to-orange-400 text-white shadow-[0_4px_14px_-4px_rgba(168,85,247,0.6)]">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="relative h-4 w-4">
@@ -121,7 +121,7 @@ export function HomeClient({ articles, usingMock }: Props) {
 
       <main className="mx-auto max-w-6xl px-4 py-6">
         {/* ── Config 무드 히어로 ───────────────────────────────── */}
-        <section className="grain relative mb-8 overflow-hidden rounded-3xl bg-gradient-to-br from-fuchsia-600 via-purple-600 to-indigo-600 px-6 py-12 shadow-[0_24px_60px_-24px_rgba(124,58,237,0.6)] sm:px-10 sm:py-16">
+        <section className="grain relative mb-8 select-none overflow-hidden rounded-3xl bg-gradient-to-br from-fuchsia-600 via-purple-600 to-indigo-600 px-6 py-12 shadow-[0_24px_60px_-24px_rgba(124,58,237,0.6)] sm:px-10 sm:py-16">
           <span aria-hidden="true" className="pointer-events-none absolute -left-16 -top-20 h-64 w-64 rounded-full bg-orange-400/60 blur-3xl" />
           <span aria-hidden="true" className="pointer-events-none absolute -right-12 bottom-[-3rem] h-72 w-72 rounded-full bg-pink-400/50 blur-3xl" />
           <span aria-hidden="true" className="pointer-events-none absolute right-1/3 top-0 h-44 w-44 rounded-full bg-cyan-300/40 blur-3xl" />
