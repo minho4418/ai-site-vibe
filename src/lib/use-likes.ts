@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 import { getSupabaseBrowser } from "./supabase-browser";
 
@@ -30,8 +30,17 @@ export function useLikes(deviceId: string | null) {
   const [overrides, setOverrides] = useState<Map<string, number>>(new Map());
   const [hydrated, setHydrated] = useState(false);
 
+  // 빠른 연타 시 stale closure 를 피하기 위해 현재 set 을 ref 로 추적.
+  const setRef = useRef<Set<string>>(set);
+
   useEffect(() => {
-    setSet(new Set(readLocal()));
+    setRef.current = set;
+  }, [set]);
+
+  useEffect(() => {
+    const initial = new Set(readLocal());
+    setRef.current = initial;
+    setSet(initial);
     setHydrated(true);
   }, []);
 
@@ -42,47 +51,40 @@ export function useLikes(deviceId: string | null) {
 
   const toggle = useCallback(
     (articleId: string, currentCount: number) => {
-      // 양방향 토글. setSet 의 updater 안에서 결정해야 빠른 연타 시 race 안전.
-      let direction: "like" | "unlike" | null = null;
-      let optimistic: number | null = null;
+      // 결정은 토글 본문에서 직접 — setState updater 안에서 하면 다음 렌더 사이클에야 실행되어
+      // 후속 부수효과(낙관적 override, RPC) 가 잘못된 분기로 들어감.
+      const wasLiked = setRef.current.has(articleId);
+      const optimistic = wasLiked ? Math.max(0, currentCount - 1) : currentCount + 1;
+      const rpcName = wasLiked ? "decrement_likes" : "increment_likes";
 
       setSet((prev) => {
         const next = new Set(prev);
-        if (prev.has(articleId)) {
-          next.delete(articleId);
-          direction = "unlike";
-          optimistic = Math.max(0, currentCount - 1);
-        } else {
-          next.add(articleId);
-          direction = "like";
-          optimistic = currentCount + 1;
-        }
+        if (wasLiked) next.delete(articleId);
+        else next.add(articleId);
+        setRef.current = next;
         return next;
       });
 
-      if (direction === null || optimistic === null) return;
-
-      // 낙관적 카운트 즉시 반영
       setOverrides((prev) => {
         const next = new Map(prev);
-        next.set(articleId, optimistic!);
+        next.set(articleId, optimistic);
         return next;
       });
 
       const supabase = getSupabaseBrowser();
       if (!supabase || !deviceId) return;
 
-      const rpcName = direction === "like" ? "increment_likes" : "decrement_likes";
       supabase
         .rpc(rpcName, { p_article_id: articleId, p_device_id: deviceId })
         .then(({ data, error }) => {
           if (error) {
             console.error(`[likes] ${rpcName} failed:`, error.message);
-            // 롤백 — set, override 모두 원복
+            // 롤백
             setSet((curr) => {
               const r = new Set(curr);
-              if (direction === "like") r.delete(articleId);
-              else r.add(articleId);
+              if (wasLiked) r.add(articleId);
+              else r.delete(articleId);
+              setRef.current = r;
               return r;
             });
             setOverrides((curr) => {
@@ -92,7 +94,6 @@ export function useLikes(deviceId: string | null) {
             });
             return;
           }
-          // RPC 가 반환한 정확한 카운트로 override 동기화
           if (typeof data === "number") {
             setOverrides((curr) => {
               const r = new Map(curr);

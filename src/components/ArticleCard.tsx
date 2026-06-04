@@ -83,7 +83,7 @@ export function ArticleCard({
 
         <div
           className={
-            "mt-auto flex items-center justify-between pt-2 transition-opacity duration-200 " +
+            "mt-auto flex select-none items-center justify-between pt-2 transition-opacity duration-200 " +
             (hydrated ? "opacity-100" : "opacity-0")
           }
           aria-hidden={!hydrated}
