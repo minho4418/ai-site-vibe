@@ -69,7 +69,7 @@ export function ArticleCard({
         ) : (
           <div
             className={
-              "relative flex h-full w-full flex-col items-center justify-center gap-2 bg-gradient-to-br p-4 text-center transition-transform duration-300 group-hover:scale-[1.03] " +
+              "relative flex h-full w-full select-none flex-col items-center justify-center gap-2 bg-gradient-to-br p-4 text-center transition-transform duration-300 group-hover:scale-[1.03] " +
               gradient
             }
           >
