@@ -67,7 +67,7 @@ export function HomeClient({ articles, usingMock }: Props) {
               onClick={() => setShowBookmarksOnly((v) => !v)}
               aria-pressed={showBookmarksOnly}
               className={
-                "inline-flex h-9 select-none items-center gap-1.5 rounded-full border-2 px-3 text-sm font-bold transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-violet-500 active:scale-[0.97] " +
+                "inline-flex h-9 shrink-0 select-none items-center gap-1.5 whitespace-nowrap rounded-full border-2 px-3 text-sm font-bold transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-violet-500 active:scale-[0.97] " +
                 (showBookmarksOnly
                   ? "border-transparent bg-rose-600 text-white shadow-[0_4px_14px_-4px_rgba(225,29,72,0.5)]"
                   : "border-zinc-900/10 bg-white/70 text-zinc-700 hover:bg-white dark:border-white/15 dark:bg-white/5 dark:text-zinc-300 dark:hover:bg-white/10")
