@@ -21,6 +21,7 @@ AI·개발툴·실무·창업·공모전까지, 한국 개발자에게 유용한
 - **디자인** — Figma Config 무드 (크림 베이스 + 그라데이션 히어로 + 그레인 + 비비드 칩, `Black Han Sans` 디스플레이 폰트)
 - **썸네일 폴백** — 이미지가 없거나 깨지면 카테고리 색 그라데이션 대체 이미지 표시
 - **목업 데이터 폴백** — Supabase 미설정 상태에서도 UI가 동작하도록 샘플 데이터 제공
+- **자동 정리** — 매일 30일 지난 **비북마크** 기사를 삭제 (북마크한 글은 보존)
 
 ---
 
@@ -59,6 +60,7 @@ curl -H "Authorization: Bearer $CRON_SECRET" http://localhost:3000/api/cron/inge
 src/
 ├── app/
 │   ├── api/cron/ingest/route.ts   # RSS 수집 (Bearer CRON_SECRET 인증)
+│   ├── api/cron/cleanup/route.ts  # 30일 지난 비북마크 기사 삭제
 │   ├── layout.tsx                 # 폰트 · ThemeProvider · 크림 베이스
 │   ├── globals.css                # Tailwind · 폰트 변수 · 그레인 텍스처
 │   └── page.tsx                   # 서버 컴포넌트 → getArticles()
@@ -88,7 +90,7 @@ supabase/
 ├── schema.sql                     # 최초 1회 Supabase SQL Editor 에서 실행
 └── migrations/                    # 추가 마이그레이션
 
-vercel.json                        # Cron: 0 * * * *  → /api/cron/ingest (매시간)
+vercel.json                        # Cron: 매일 08시(KST) ingest + 08시30분 cleanup
 ```
 
 ---
