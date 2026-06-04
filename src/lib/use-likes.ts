@@ -4,27 +4,6 @@ import { useCallback, useEffect, useRef, useState } from "react";
 
 import { getSupabaseBrowser } from "./supabase-browser";
 
-const STORAGE_KEY = "ai-news:liked";
-
-function readLocal(): string[] {
-  try {
-    const raw = window.localStorage.getItem(STORAGE_KEY);
-    if (!raw) return [];
-    const parsed = JSON.parse(raw);
-    return Array.isArray(parsed) ? parsed.map(String) : [];
-  } catch {
-    return [];
-  }
-}
-
-function writeLocal(set: Set<string>) {
-  try {
-    window.localStorage.setItem(STORAGE_KEY, JSON.stringify(Array.from(set)));
-  } catch {
-    // ignore
-  }
-}
-
 export function useLikes(deviceId: string | null) {
   const [set, setSet] = useState<Set<string>>(new Set());
   const [overrides, setOverrides] = useState<Map<string, number>>(new Map());
@@ -32,31 +11,51 @@ export function useLikes(deviceId: string | null) {
 
   // 빠른 연타 시 stale closure 를 피하기 위해 현재 set 을 ref 로 추적.
   const setRef = useRef<Set<string>>(set);
-
   useEffect(() => {
     setRef.current = set;
   }, [set]);
 
+  // DB 가 진실의 원천. 페이지 마다 한 번 device_id 로 likes 를 fetch 해서 초기 상태 구성.
+  // (이전엔 localStorage 캐시를 같이 썼지만, 북마크와 동일하게 DB 단일 출처로 통일.)
   useEffect(() => {
-    const initial = new Set(readLocal());
-    setRef.current = initial;
-    setSet(initial);
-    setHydrated(true);
-  }, []);
+    if (!deviceId) return;
+    const supabase = getSupabaseBrowser();
 
-  useEffect(() => {
-    if (!hydrated) return;
-    writeLocal(set);
-  }, [set, hydrated]);
+    if (!supabase) {
+      // Supabase 미설정 (목업 모드) — 빈 Set 으로 시작.
+      setHydrated(true);
+      return;
+    }
+
+    let cancelled = false;
+    (async () => {
+      const { data, error } = await supabase
+        .from("likes")
+        .select("article_id")
+        .eq("device_id", deviceId);
+      if (cancelled) return;
+      if (error) {
+        console.error("[likes] fetch failed:", error.message);
+      } else if (data) {
+        const next = new Set(data.map((r) => String(r.article_id)));
+        setRef.current = next;
+        setSet(next);
+      }
+      setHydrated(true);
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [deviceId]);
 
   const toggle = useCallback(
     (articleId: string, currentCount: number) => {
-      // 결정은 토글 본문에서 직접 — setState updater 안에서 하면 다음 렌더 사이클에야 실행되어
-      // 후속 부수효과(낙관적 override, RPC) 가 잘못된 분기로 들어감.
       const wasLiked = setRef.current.has(articleId);
       const optimistic = wasLiked ? Math.max(0, currentCount - 1) : currentCount + 1;
       const rpcName = wasLiked ? "decrement_likes" : "increment_likes";
 
+      // 1) 좋아요 set 낙관적 토글
       setSet((prev) => {
         const next = new Set(prev);
         if (wasLiked) next.delete(articleId);
@@ -65,6 +64,7 @@ export function useLikes(deviceId: string | null) {
         return next;
       });
 
+      // 2) 카운트 override 낙관적 +1/-1
       setOverrides((prev) => {
         const next = new Map(prev);
         next.set(articleId, optimistic);
@@ -74,12 +74,12 @@ export function useLikes(deviceId: string | null) {
       const supabase = getSupabaseBrowser();
       if (!supabase || !deviceId) return;
 
+      // 3) RPC 호출 → 성공 시 정확한 카운트로 동기화, 실패 시 롤백
       supabase
         .rpc(rpcName, { p_article_id: articleId, p_device_id: deviceId })
         .then(({ data, error }) => {
           if (error) {
             console.error(`[likes] ${rpcName} failed:`, error.message);
-            // 롤백
             setSet((curr) => {
               const r = new Set(curr);
               if (wasLiked) r.add(articleId);
