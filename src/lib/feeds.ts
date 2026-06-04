@@ -48,6 +48,18 @@ export const FEEDS: FeedSource[] = [
     category: "Career",
     limit: 10,
   },
+  {
+    url: googleNewsKR('"AI 스타트업" OR "AI 창업" OR "테크 스타트업" OR "스타트업 투자 유치" OR 액셀러레이터'),
+    source: "창업·스타트업 (Google뉴스)",
+    category: "Startup",
+    limit: 10,
+  },
+  {
+    url: googleNewsKR('"AI 공모전" OR "개발 공모전" OR 해커톤 OR "AI 경진대회" OR "개발자 챌린지" OR 캐글'),
+    source: "공모전·해커톤 (Google뉴스)",
+    category: "Contest",
+    limit: 10,
+  },
 
   // ── 영어 원문 소스 (한/영 균형) ──────────────────────────────────
   { url: "https://openai.com/news/rss.xml", source: "OpenAI", category: "LLM" },

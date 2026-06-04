@@ -12,6 +12,8 @@ const CATEGORY_GRADIENTS: Record<Article["category"], string> = {
   LLM: "from-sky-500 via-blue-500 to-indigo-600",
   Practice: "from-emerald-500 via-teal-500 to-cyan-600",
   Career: "from-amber-500 via-orange-500 to-rose-500",
+  Startup: "from-rose-500 via-pink-500 to-fuchsia-600",
+  Contest: "from-lime-500 via-green-500 to-emerald-600",
 };
 
 // "AI 코딩툴 (Google뉴스)" → "AI 코딩툴" 처럼 대체 이미지에 쓸 짧은 소스명.

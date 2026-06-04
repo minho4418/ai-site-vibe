@@ -16,6 +16,21 @@ type FeedResult = {
   error?: string;
 };
 
+type RawItem = { isoDate?: string; pubDate?: string };
+
+function pickPublishedAt(item: RawItem, ingestStart: number, index: number): string {
+  if (item.isoDate) {
+    const d = new Date(item.isoDate);
+    if (!Number.isNaN(d.getTime())) return d.toISOString();
+  }
+  if (item.pubDate) {
+    const d = new Date(item.pubDate);
+    if (!Number.isNaN(d.getTime())) return d.toISOString();
+  }
+  // RSS 가 시간을 안 주는 경우 — 같은 ingest 안에서 index 만큼 1초씩 과거로 흩뿌려 순서 보존.
+  return new Date(ingestStart - index * 1000).toISOString();
+}
+
 export async function GET(request: Request) {
   const expected = process.env.CRON_SECRET;
   const auth = request.headers.get("authorization");
@@ -46,6 +61,8 @@ export async function GET(request: Request) {
 
   const results: FeedResult[] = [];
   let totalUpserted = 0;
+  // 같은 ingest 안에서 시간 정보가 빠진 글들도 RSS 순서를 보존하도록 fallback 의 기준점.
+  const ingestStart = Date.now();
 
   for (const feed of FEEDS) {
     try {
@@ -61,7 +78,7 @@ export async function GET(request: Request) {
         // 종합 피드(aiOnly)는 AI 관련 글만 남긴다. slice 보다 먼저 걸러야 limit 개를 채운다.
         .filter(({ title, summary }) => !feed.aiOnly || isAiRelated(`${title} ${summary}`))
         .slice(0, limit)
-        .map(({ item, title, summary }) => ({
+        .map(({ item, title, summary }, index) => ({
           url: normalizeUrl(item.link!),
           title,
           source: feed.source,
@@ -69,8 +86,9 @@ export async function GET(request: Request) {
           category: classifyCategory(`${title} ${summary}`) ?? feed.category,
           summary,
           thumbnail_url: extractThumbnail(item),
-          published_at:
-            item.isoDate ?? (item.pubDate ? new Date(item.pubDate).toISOString() : new Date().toISOString()),
+          // RSS 가 시간을 안 주면(예: 일부 Google News, 한국 RSS) 같은 시각 fallback 으로 동률이 생긴다.
+          // → ingest 시작 시점에서 index*1초 만큼 과거로 분산시켜 RSS 항목 순서(최신 → 오래된)를 그대로 보존.
+          published_at: pickPublishedAt(item, ingestStart, index),
         }));
 
       if (rows.length === 0) {
@@ -78,9 +96,11 @@ export async function GET(request: Request) {
         continue;
       }
 
+      // ignoreDuplicates=false → 같은 URL 의 row 는 새 RSS 데이터로 갱신.
+      // articles.likes_count 는 rows 에 포함하지 않으므로 기존 값이 유지됨.
       const { error, count } = await supabase
         .from("articles")
-        .upsert(rows, { onConflict: "url", ignoreDuplicates: true, count: "exact" });
+        .upsert(rows, { onConflict: "url", count: "exact" });
 
       if (error) {
         results.push({ source: feed.source, fetched: rows.length, error: error.message });

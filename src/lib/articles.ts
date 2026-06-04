@@ -22,6 +22,9 @@ export async function getArticles(): Promise<{ articles: Article[]; usingMock: b
     .from("articles")
     .select("id, title, url, source, category, summary, thumbnail_url, published_at, likes_count")
     .order("published_at", { ascending: false })
+    // published_at 동률(특히 RSS 시간이 비었던 fallback row 들) 시 안정 정렬을 위한 tie-breaker.
+    .order("created_at", { ascending: false })
+    .order("id", { ascending: false })
     .limit(60);
 
   if (error) {
