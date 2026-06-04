@@ -25,8 +25,8 @@ export function SearchInput({ value, onChange }: Props) {
         type="search"
         value={value}
         onChange={(event) => onChange(event.target.value)}
-        placeholder="Search articles..."
-        className="h-9 w-full rounded-lg border border-zinc-200 bg-white pl-9 pr-3 text-sm text-zinc-900 placeholder:text-zinc-400 transition-colors focus-visible:border-violet-400 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-violet-500 dark:border-zinc-800 dark:bg-zinc-900 dark:text-zinc-100 dark:placeholder:text-zinc-500"
+        placeholder="검색..."
+        className="h-9 w-full rounded-full border-2 border-zinc-900/10 bg-white/70 pl-9 pr-3 text-sm text-zinc-900 placeholder:text-zinc-400 transition-colors focus-visible:border-violet-400 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-violet-500 dark:border-white/15 dark:bg-white/5 dark:text-zinc-100 dark:placeholder:text-zinc-500"
       />
     </div>
   );

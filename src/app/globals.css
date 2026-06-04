@@ -5,9 +5,23 @@
 @theme inline {
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
+  --font-display: var(--font-black-han-sans);
 }
 
 html,
 body {
   height: 100%;
+}
+
+/* 그레인(노이즈) 텍스처 오버레이 — Config 무드의 핵심.
+   부모에 position:relative + overflow-hidden, 클래스 .grain 만 붙이면 됨. */
+.grain::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='220' height='220'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  background-size: 220px 220px;
+  opacity: 0.16;
+  mix-blend-mode: overlay;
+  pointer-events: none;
 }

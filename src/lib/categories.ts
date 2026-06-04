@@ -19,6 +19,17 @@ export const CATEGORY_LABELS = Object.fromEntries(
 
 // 칩 배경은 ArticleCard 에서 흰/검정 반투명으로 통일하고, 카테고리는 글자색·링 색상으로만 구분한다.
 // (이미지 위에 얹히는 칩이라 채도가 강하지 않으면 그라데이션 썸네일에 가려진다.)
+// 필터 칩이 '선택됨' 상태일 때의 비비드 배경색 (카테고리별 캔디 컬러).
+export const CATEGORY_CHIP_ACTIVE: Record<CategoryId, string> = {
+  all: "bg-zinc-900 text-white dark:bg-white dark:text-zinc-900",
+  Tools: "bg-violet-600 text-white",
+  LLM: "bg-sky-600 text-white",
+  Practice: "bg-emerald-600 text-white",
+  Career: "bg-amber-400 text-zinc-900",
+  Startup: "bg-rose-600 text-white",
+  Contest: "bg-lime-500 text-zinc-900",
+};
+
 export const CATEGORY_COLORS: Record<Exclude<CategoryId, "all">, string> = {
   Tools: "text-violet-700 ring-violet-500/40 dark:text-violet-300",
   LLM: "text-sky-700 ring-sky-500/40 dark:text-sky-300",
