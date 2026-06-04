@@ -17,11 +17,13 @@ export const CATEGORY_LABELS = Object.fromEntries(
   CATEGORIES.map((c) => [c.id, c.label]),
 ) as Record<CategoryId, string>;
 
+// 칩 배경은 ArticleCard 에서 흰/검정 반투명으로 통일하고, 카테고리는 글자색·링 색상으로만 구분한다.
+// (이미지 위에 얹히는 칩이라 채도가 강하지 않으면 그라데이션 썸네일에 가려진다.)
 export const CATEGORY_COLORS: Record<Exclude<CategoryId, "all">, string> = {
-  Tools: "bg-violet-500/15 text-violet-600 ring-violet-500/30 dark:text-violet-300",
-  LLM: "bg-sky-500/15 text-sky-600 ring-sky-500/30 dark:text-sky-300",
-  Practice: "bg-emerald-500/15 text-emerald-600 ring-emerald-500/30 dark:text-emerald-300",
-  Career: "bg-amber-500/15 text-amber-600 ring-amber-500/30 dark:text-amber-300",
-  Startup: "bg-rose-500/15 text-rose-600 ring-rose-500/30 dark:text-rose-300",
-  Contest: "bg-lime-500/15 text-lime-600 ring-lime-500/30 dark:text-lime-300",
+  Tools: "text-violet-700 ring-violet-500/40 dark:text-violet-300",
+  LLM: "text-sky-700 ring-sky-500/40 dark:text-sky-300",
+  Practice: "text-emerald-700 ring-emerald-500/40 dark:text-emerald-300",
+  Career: "text-amber-700 ring-amber-500/40 dark:text-amber-300",
+  Startup: "text-rose-700 ring-rose-500/40 dark:text-rose-300",
+  Contest: "text-lime-700 ring-lime-500/40 dark:text-lime-300",
 };
