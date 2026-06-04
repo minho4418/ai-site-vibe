@@ -14,20 +14,23 @@ type FeedResult = {
   fetched?: number;
   upserted?: number;
   error?: string;
+  // 임시 진단용 — RSS 첫 항목의 시간 후보를 그대로 보여줌
+  debug_first_item?: Record<string, string | undefined>;
 };
 
-type RawItem = { isoDate?: string; pubDate?: string };
+// rss-parser 가 RSS 2.0 의 pubDate 는 자동으로 isoDate 로 만들어주지만,
+// Atom 의 <published>/<updated>, Dublin Core 의 <dc:date> 는 customFields 로 명시해야 가져온다.
+const DATE_FIELDS = ["isoDate", "pubDate", "published", "updated", "dc:date", "date"] as const;
+type RawItem = Partial<Record<(typeof DATE_FIELDS)[number], string>>;
 
 function pickPublishedAt(item: RawItem, ingestStart: number, index: number): string {
-  if (item.isoDate) {
-    const d = new Date(item.isoDate);
+  for (const key of DATE_FIELDS) {
+    const raw = item[key];
+    if (!raw) continue;
+    const d = new Date(raw);
     if (!Number.isNaN(d.getTime())) return d.toISOString();
   }
-  if (item.pubDate) {
-    const d = new Date(item.pubDate);
-    if (!Number.isNaN(d.getTime())) return d.toISOString();
-  }
-  // RSS 가 시간을 안 주는 경우 — 같은 ingest 안에서 index 만큼 1초씩 과거로 흩뿌려 순서 보존.
+  // RSS 가 어떤 시간 필드도 안 주는 경우 — 같은 ingest 안에서 index 만큼 1초씩 과거로 흩뿌려 순서 보존.
   return new Date(ingestStart - index * 1000).toISOString();
 }
 
@@ -53,6 +56,10 @@ export async function GET(request: Request) {
 
   const parser = new Parser({
     timeout: 12_000,
+    customFields: {
+      // Atom / Dublin Core 시간 필드를 명시적으로 파싱해서 item.published, item.updated, item['dc:date'] 로 노출.
+      item: ["published", "updated", "dc:date", "date"],
+    },
     headers: {
       "User-Agent":
         "Mozilla/5.0 (compatible; ai-news-bot/1.0; +https://github.com/your-handle/ai-news)",
@@ -102,12 +109,20 @@ export async function GET(request: Request) {
         .from("articles")
         .upsert(rows, { onConflict: "url", count: "exact" });
 
+      // 임시 진단: 첫 RSS item 이 어떤 시간 필드를 가지고 있는지 응답으로 노출 (확인 후 제거 예정).
+      const firstItem = (parsed.items[0] ?? {}) as unknown as Record<string, unknown>;
+      const debug_first_item: Record<string, string | undefined> = {};
+      for (const key of DATE_FIELDS) {
+        const v = firstItem[key];
+        if (typeof v === "string") debug_first_item[key] = v;
+      }
+
       if (error) {
-        results.push({ source: feed.source, fetched: rows.length, error: error.message });
+        results.push({ source: feed.source, fetched: rows.length, error: error.message, debug_first_item });
       } else {
         const upserted = count ?? rows.length;
         totalUpserted += upserted;
-        results.push({ source: feed.source, fetched: rows.length, upserted });
+        results.push({ source: feed.source, fetched: rows.length, upserted, debug_first_item });
       }
     } catch (err) {
       results.push({ source: feed.source, error: (err as Error).message });
