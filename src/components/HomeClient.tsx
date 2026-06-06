@@ -42,12 +42,13 @@ export function HomeClient({ articles, usingMock }: Props) {
   // 최신 60개에 들어있는 기사 id 집합.
   const articleIds = useMemo(() => new Set(articles.map((a) => a.id)), [articles]);
 
-  // 🔥인기로 표시할 기사 id: 조회 0 제외 후 조회수 높은순 상위 20%. 전체 최신 집합 기준이라 필터/검색해도 흔들리지 않는다.
+  // 🔥인기로 표시할 기사 id: 표출된 피드(최신 N개)의 상위 20% 자리를 조회수 높은 순으로 채운다.
+  // 단 조회 0 인 글은 후보에서 제외(아무도 안 누른 글이 인기로 채워지지 않게) → 실제 HOT 수 = min(피드의 20%, 조회된 글 수).
   const hotIds = useMemo(() => {
     const ranked = articles
       .filter((a) => (a.views_count ?? 0) > 0)
       .sort((a, b) => (b.views_count ?? 0) - (a.views_count ?? 0));
-    const topN = Math.ceil(ranked.length * HOT_TOP_FRACTION);
+    const topN = Math.ceil(articles.length * HOT_TOP_FRACTION);
     return new Set(ranked.slice(0, topN).map((a) => a.id));
   }, [articles]);
 
