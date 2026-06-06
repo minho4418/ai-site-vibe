@@ -2,6 +2,7 @@ import Parser from "rss-parser";
 
 import { classifyCategory, isAiRelated } from "@/lib/categorize";
 import { FEEDS } from "@/lib/feeds";
+import { enrichThumbnails } from "@/lib/og-image";
 import { extractSummary, extractThumbnail, normalizeUrl } from "@/lib/rss-extract";
 import { getSupabaseServiceServer } from "@/lib/supabase-server";
 
@@ -70,6 +71,8 @@ export async function GET(request: Request) {
   let totalUpserted = 0;
   // 같은 ingest 안에서 시간 정보가 빠진 글들도 RSS 순서를 보존하도록 fallback 의 기준점.
   const ingestStart = Date.now();
+  // RSS 에 이미지가 없는 직링크 기사에 og:image 를 채우는 전체 예산(cron 60s 한도 보호). 신규 직링크는 보통 이보다 적다.
+  let ogBudget = 40;
 
   for (const feed of FEEDS) {
     try {
@@ -102,6 +105,9 @@ export async function GET(request: Request) {
         results.push({ source: feed.source, fetched: 0, upserted: 0 });
         continue;
       }
+
+      // RSS 에 이미지가 없는 직링크 기사들에 한해 og:image 보강(Google News 는 자동 제외).
+      ogBudget = await enrichThumbnails(rows, ogBudget);
 
       // ignoreDuplicates=false → 같은 URL 의 row 는 새 RSS 데이터로 갱신.
       // articles.likes_count 는 rows 에 포함하지 않으므로 기존 값이 유지됨.

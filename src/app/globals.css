@@ -13,6 +13,42 @@ body {
   height: 100%;
 }
 
+/* ── 사이트 배경: 은은한 메시 그라데이션 블롭 (브랜드 컬러) ──────────────
+   body 의 단색 위에 고정으로 깔리고(z-index:-1), 콘텐츠는 그 위에 그려진다.
+   히어로의 fuchsia/purple/orange 무드를 화면 전체로 확장하되 가독성은 유지. */
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background:
+    radial-gradient(38rem 28rem at 10% -6%, rgba(217, 70, 239, 0.1), transparent 60%),
+    radial-gradient(34rem 26rem at 96% 6%, rgba(251, 146, 60, 0.1), transparent 60%),
+    radial-gradient(40rem 32rem at 50% 112%, rgba(139, 92, 246, 0.09), transparent 60%);
+}
+.dark body::before {
+  background:
+    radial-gradient(40rem 30rem at 8% -8%, rgba(217, 70, 239, 0.16), transparent 60%),
+    radial-gradient(36rem 28rem at 98% 4%, rgba(249, 115, 22, 0.12), transparent 62%),
+    radial-gradient(44rem 34rem at 50% 114%, rgba(99, 102, 241, 0.18), transparent 60%);
+}
+
+/* 전체에 깔리는 아주 옅은 그레인 — 평평함을 없애고 'Config 무드' 질감을 통일. */
+body::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  opacity: 0.04;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='220' height='220'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  background-size: 220px 220px;
+}
+.dark body::after {
+  opacity: 0.06;
+}
+
 /* 그레인(노이즈) 텍스처 오버레이 — Config 무드의 핵심.
    부모에 position:relative + overflow-hidden, 클래스 .grain 만 붙이면 됨. */
 .grain::after {

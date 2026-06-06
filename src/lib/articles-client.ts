@@ -6,6 +6,25 @@ import type { Article } from "./types";
 
 const CATEGORY_SET = new Set<string>(CATEGORIES.filter((c) => c.id !== "all").map((c) => c.id));
 
+// 같은 기사를 한 세션에서 여러 번 눌러도 조회수는 1회만 올린다(자기 자신 인플레이션 방지).
+const viewedThisSession = new Set<string>();
+
+/**
+ * 카드(기사) 클릭 시 조회수를 +1 한다. fire-and-forget — 실패해도 페이지엔 영향 없음.
+ * increment_views RPC / views_count 컬럼이 아직 없으면 콘솔 경고만 남고 무시된다.
+ */
+export function recordView(articleId: string): void {
+  if (viewedThisSession.has(articleId)) return;
+  viewedThisSession.add(articleId);
+
+  const supabase = getSupabaseBrowser();
+  if (!supabase) return;
+
+  supabase.rpc("increment_views", { p_article_id: articleId }).then(({ error }) => {
+    if (error) console.error("[views] increment_views failed:", error.message);
+  });
+}
+
 // 서버 articles.ts 의 normalizeCategory 와 동일 규칙(구 카테고리는 LLM 로 폴백).
 function normalizeCategory(raw: string): Article["category"] {
   return (CATEGORY_SET.has(raw) ? raw : "LLM") as Article["category"];

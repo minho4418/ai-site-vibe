@@ -18,6 +18,10 @@ type Props = {
   usingMock: boolean;
 };
 
+// 🔥인기 배지 기준 (design-system.md §4): 갯수 임계값 없이, 조회수 '높은순 상위 20%'.
+// 단 조회 0 인 글(아무도 안 누른 글)은 후보에서 제외해 모든 카드가 인기가 되는 걸 막는다.
+const HOT_TOP_FRACTION = 0.2;
+
 export function HomeClient({ articles, usingMock }: Props) {
   const [category, setCategory] = useState<CategoryId>("all");
   const [showBookmarksOnly, setShowBookmarksOnly] = useState(false);
@@ -37,6 +41,15 @@ export function HomeClient({ articles, usingMock }: Props) {
 
   // 최신 60개에 들어있는 기사 id 집합.
   const articleIds = useMemo(() => new Set(articles.map((a) => a.id)), [articles]);
+
+  // 🔥인기로 표시할 기사 id: 조회 0 제외 후 조회수 높은순 상위 20%. 전체 최신 집합 기준이라 필터/검색해도 흔들리지 않는다.
+  const hotIds = useMemo(() => {
+    const ranked = articles
+      .filter((a) => (a.views_count ?? 0) > 0)
+      .sort((a, b) => (b.views_count ?? 0) - (a.views_count ?? 0));
+    const topN = Math.ceil(ranked.length * HOT_TOP_FRACTION);
+    return new Set(ranked.slice(0, topN).map((a) => a.id));
+  }, [articles]);
 
   // 북마크했지만 최신 60개 밖으로 밀려난 기사들 — 북마크 보기를 켤 때만 id 로 추가 조회.
   const [bookmarkedExtras, setBookmarkedExtras] = useState<Article[]>([]);
@@ -172,6 +185,7 @@ export function HomeClient({ articles, usingMock }: Props) {
                 liked={likedSet.has(article.id)}
                 bookmarked={bookmarkedSet.has(article.id)}
                 hydrated={hydrated}
+                hot={hotIds.has(article.id)}
                 likesOverride={likesOverrides.get(article.id)}
                 onToggleLike={toggleLike}
                 onToggleBookmark={toggleBookmark}

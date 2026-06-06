@@ -1,3 +1,9 @@
+// 발행 후 windowMs 이내인지(= "방금 들어온" 글인지). 🆕NEW 배지 판정용.
+// now 를 기본 인자로 받아 렌더 중 직접 Date.now() 호출(impure)을 피한다 — timeAgo 와 동일 패턴.
+export function isFresh(iso: string, windowMs: number, now: number = Date.now()): boolean {
+  return now - new Date(iso).getTime() < windowMs;
+}
+
 export function timeAgo(iso: string, now: number = Date.now()): string {
   const diff = Math.max(0, now - new Date(iso).getTime());
   const minutes = Math.floor(diff / 60_000);

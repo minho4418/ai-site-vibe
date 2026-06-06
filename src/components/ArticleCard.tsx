@@ -2,8 +2,9 @@
 
 import { useState } from "react";
 
+import { recordView } from "@/lib/articles-client";
 import { CATEGORY_COLORS, CATEGORY_LABELS } from "@/lib/categories";
-import { timeAgo } from "@/lib/time";
+import { isFresh, timeAgo } from "@/lib/time";
 import type { Article } from "@/lib/types";
 
 // 썸네일이 없을 때 보여줄 카테고리별 그라데이션 대체 이미지.
@@ -21,11 +22,27 @@ function cleanSource(source: string): string {
   return source.replace(/\s*\((?:via\s+)?Google\s*(?:News|뉴스)\)\s*/i, "").trim() || source;
 }
 
+// 출처 도메인의 파비콘(구글 무료 서비스). 신뢰·식별 신호 — The Rundown/Neuron 의 아바타 역할.
+function faviconUrl(pageUrl: string): string | null {
+  try {
+    return `https://www.google.com/s2/favicons?domain=${new URL(pageUrl).hostname}&sz=64`;
+  } catch {
+    return null;
+  }
+}
+
+// 🆕NEW = "방금 들어온" 3시간 (design-system.md §4).
+// 이 사이트는 매일 cron 으로 최근 24h 기사를 한 번에 수집 → 24h 창이면 모든 카드가 NEW 라 무의미하다.
+// 그래서 수집 직후 갓 올라온 기사에만 잠깐 켜지도록 3h 로 좁힌다(평소엔 0개 = 노이즈 없음).
+// 🔥인기는 HomeClient 가 좋아요 상대 상위로 계산해 hot prop 으로 내려준다.
+const NEW_WINDOW_MS = 3 * 60 * 60 * 1000;
+
 type Props = {
   article: Article;
   liked: boolean;
   bookmarked: boolean;
   hydrated: boolean;
+  hot: boolean;
   likesOverride?: number;
   onToggleLike: (id: string, currentCount: number) => void;
   onToggleBookmark: (id: string) => void;
@@ -36,6 +53,7 @@ export function ArticleCard({
   liked,
   bookmarked,
   hydrated,
+  hot,
   likesOverride,
   onToggleLike,
   onToggleBookmark,
@@ -45,16 +63,33 @@ export function ArticleCard({
   // 썸네일 URL 이 없거나, 있더라도 로딩에 실패하면(핫링크 차단·404 등) 그라데이션 대체 이미지를 쓴다.
   const [imgFailed, setImgFailed] = useState(false);
   const showImage = Boolean(article.thumbnail_url) && !imgFailed;
+  // 클릭 시 조회수를 즉시 +1 로 보여주기 위한 낙관적 플래그(좋아요 override 와 같은 사고방식).
+  // 실제 DB 증가는 recordView 가 fire-and-forget 으로 처리하고, 화면엔 바로 반영한다.
+  const [viewedLocally, setViewedLocally] = useState(false);
   // article.likes_count 는 SSR 시점의 DB 값. liked 가 true 라면 그 사용자의 좋아요가 이미 포함돼 있으므로 +1 더하지 않는다.
   // 클릭 직후엔 use-likes 가 낙관적 override 를 미리 채워주므로 UI 도 즉시 반영됨.
   const displayLikes = likesOverride ?? article.likes_count;
 
+  // 배지: 인기(hot)는 HomeClient 가 상위로 판정해 내려주고, 신선도(isNew)는 발행 시각으로 판단.
+  const isHot = hot;
+  const isNew = isFresh(article.published_at, NEW_WINDOW_MS);
+
+  const views = (article.views_count ?? 0) + (viewedLocally ? 1 : 0);
+  const favicon = faviconUrl(article.url);
+
+  // 카드(기사) 열 때: 조회수 낙관적 +1 + DB 증가(둘 다 세션당 1회만 효과).
+  const handleOpen = () => {
+    setViewedLocally(true);
+    recordView(article.id);
+  };
+
   return (
-    <article className="group flex flex-col overflow-hidden rounded-2xl border-2 border-zinc-900/10 bg-white shadow-[0_2px_10px_-4px_rgba(15,23,42,0.1)] transition-all duration-200 hover:-translate-y-1 hover:border-zinc-900/20 hover:shadow-[0_18px_40px_-14px_rgba(124,58,237,0.4)] dark:border-white/10 dark:bg-zinc-900/70 dark:hover:border-white/20 dark:hover:shadow-[0_18px_40px_-14px_rgba(0,0,0,0.7)]">
+    <article className="group flex flex-col overflow-hidden rounded-2xl border-2 border-zinc-900/10 bg-white shadow-[0_2px_10px_-4px_rgba(15,23,42,0.1)] transition-[transform,border-color,box-shadow] duration-200 hover:-translate-y-1 hover:border-zinc-900/20 hover:shadow-[0_18px_40px_-14px_rgba(124,58,237,0.4)] dark:border-white/10 dark:bg-zinc-900/70 dark:hover:border-white/20 dark:hover:shadow-[0_18px_40px_-14px_rgba(0,0,0,0.7)]">
       <a
         href={article.url}
         target="_blank"
         rel="noopener noreferrer"
+        onClick={handleOpen}
         className="relative block aspect-[16/9] overflow-hidden bg-zinc-100 dark:bg-zinc-800"
       >
         {showImage ? (
@@ -67,27 +102,28 @@ export function ArticleCard({
             className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-[1.03]"
           />
         ) : (
+          // 썸네일이 없을 때: '가짜 사진'이 아니라 의도된 에디토리얼 커버.
+          // 카테고리 라벨을 거대 워터마크로 깔고, 그레인 + 소스명을 얹어 잡지 섹션 표지처럼 보이게 한다.
           <div
             className={
-              "relative flex h-full w-full select-none flex-col items-center justify-center gap-2 bg-gradient-to-br p-4 text-center transition-transform duration-300 group-hover:scale-[1.03] " +
+              "grain relative flex h-full w-full select-none flex-col justify-end overflow-hidden bg-gradient-to-br p-4 transition-transform duration-300 group-hover:scale-[1.03] " +
               gradient
             }
           >
-            {/* 은은한 광택 오버레이 */}
+            {/* 광택 오버레이 */}
             <span
               aria-hidden="true"
               className="pointer-events-none absolute inset-0 [background:radial-gradient(120%_80%_at_15%_10%,rgba(255,255,255,0.35),transparent_55%)]"
             />
-            <svg
-              viewBox="0 0 24 24"
-              fill="currentColor"
-              className="h-7 w-7 text-white/90 drop-shadow"
+            {/* 거대 카테고리 워터마크 */}
+            <span
               aria-hidden="true"
+              className="pointer-events-none absolute -bottom-4 -right-1 font-display text-[4.25rem] leading-none text-white/15"
             >
-              <path d="M12 2l1.8 5.2L19 9l-5.2 1.8L12 16l-1.8-5.2L5 9l5.2-1.8L12 2z" />
-              <path d="M19 14l.9 2.6L22.5 17.5l-2.6.9L19 21l-.9-2.6-2.6-.9 2.6-.9L19 14z" opacity="0.8" />
-            </svg>
-            <span className="line-clamp-2 text-sm font-semibold text-white drop-shadow-sm">
+              {CATEGORY_LABELS[article.category] ?? article.category}
+            </span>
+            {/* 소스명 (표지 타이틀) */}
+            <span className="relative line-clamp-2 font-display text-xl leading-tight text-white drop-shadow-sm">
               {cleanSource(article.source)}
             </span>
           </div>
@@ -100,25 +136,74 @@ export function ArticleCard({
         >
           {CATEGORY_LABELS[article.category] ?? article.category}
         </span>
+
+        {/* 우상단 신호 배지: 🔥인기 / 🆕NEW (design-system.md §4) */}
+        {(isHot || isNew) && (
+          <div className="absolute right-3 top-3 flex flex-col items-end gap-1.5">
+            {isHot && (
+              <span className="inline-flex select-none items-center gap-1 rounded-full bg-gradient-to-r from-amber-500 to-orange-500 px-2 py-0.5 text-[11px] font-bold text-white shadow-[0_2px_8px_-2px_rgba(249,115,22,0.7)]">
+                🔥 인기
+              </span>
+            )}
+            {isNew && (
+              <span className="inline-flex select-none items-center rounded-full bg-violet-600/90 px-2 py-0.5 text-[11px] font-bold uppercase tracking-wide text-white shadow-sm ring-1 ring-inset ring-white/20 backdrop-blur-sm">
+                New
+              </span>
+            )}
+          </div>
+        )}
+
+        {/* 호버 시 '읽기 →' 클릭 유도 오버레이 (opacity·translate 만 트랜지션) */}
+        <span
+          aria-hidden="true"
+          className="pointer-events-none absolute inset-x-0 bottom-0 flex translate-y-1 items-center justify-end gap-1 bg-gradient-to-t from-black/65 via-black/20 to-transparent px-3 pb-2.5 pt-10 text-xs font-bold text-white opacity-0 transition-[opacity,transform] duration-200 group-hover:translate-y-0 group-hover:opacity-100"
+        >
+          읽기 <span className="transition-transform duration-200 group-hover:translate-x-0.5">→</span>
+        </span>
       </a>
 
       <div className="flex flex-1 flex-col gap-3 p-4">
-        <div className="flex items-center gap-2 text-xs text-zinc-500 dark:text-zinc-400">
-          <span className="font-medium text-zinc-700 dark:text-zinc-300">{article.source}</span>
+        <div className="flex items-center gap-1.5 text-xs text-zinc-500 dark:text-zinc-400">
+          {favicon && (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
+              src={favicon}
+              alt=""
+              width={16}
+              height={16}
+              loading="lazy"
+              onError={(e) => {
+                e.currentTarget.style.display = "none";
+              }}
+              className="h-4 w-4 shrink-0 rounded-sm"
+            />
+          )}
+          <span className="truncate font-medium text-zinc-700 dark:text-zinc-300">{article.source}</span>
           <span aria-hidden="true">·</span>
-          <time dateTime={article.published_at}>{timeAgo(article.published_at)}</time>
+          <time dateTime={article.published_at} className="shrink-0">
+            {timeAgo(article.published_at)}
+          </time>
+          {views > 0 && (
+            <>
+              <span aria-hidden="true">·</span>
+              <span className="shrink-0 tabular-nums">조회 {views.toLocaleString()}</span>
+            </>
+          )}
         </div>
 
+        {/* 제목+요약을 한 링크로 묶어 클릭 영역을 넓힌다(카드 전체 클릭 대체 — 하단 버튼과 중첩 회피). */}
         <a
           href={article.url}
           target="_blank"
           rel="noopener noreferrer"
-          className="text-base font-semibold leading-snug text-zinc-900 transition-colors hover:text-violet-600 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-violet-500 dark:text-zinc-100 dark:hover:text-violet-400"
+          onClick={handleOpen}
+          className="group/read flex flex-col gap-2 rounded-lg focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-violet-500"
         >
-          {article.title}
+          <h3 className="text-base font-semibold leading-snug text-zinc-900 underline-offset-2 decoration-violet-400 decoration-2 transition-colors group-hover/read:text-violet-600 group-hover/read:underline dark:text-zinc-100 dark:group-hover/read:text-violet-400">
+            {article.title}
+          </h3>
+          <p className="line-clamp-2 text-sm text-zinc-600 dark:text-zinc-400">{article.summary}</p>
         </a>
-
-        <p className="line-clamp-2 text-sm text-zinc-600 dark:text-zinc-400">{article.summary}</p>
 
         <div
           className={
