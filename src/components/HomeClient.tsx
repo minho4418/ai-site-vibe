@@ -150,7 +150,7 @@ export function HomeClient({ articles, usingMock }: Props) {
 
       <main className="mx-auto max-w-6xl px-4 py-6">
         {/* ── Config 무드 히어로 ───────────────────────────────── */}
-        <section className="grain relative mb-8 select-none overflow-hidden rounded-3xl bg-gradient-to-br from-fuchsia-600 via-purple-600 to-indigo-600 px-6 py-12 shadow-[0_24px_60px_-24px_rgba(124,58,237,0.6)] sm:px-10 sm:py-16">
+        <section className="grain relative mb-8 cursor-default select-none overflow-hidden rounded-3xl bg-gradient-to-br from-fuchsia-600 via-purple-600 to-indigo-600 px-6 py-12 shadow-[0_24px_60px_-24px_rgba(124,58,237,0.6)] sm:px-10 sm:py-16">
           <span aria-hidden="true" className="pointer-events-none absolute -left-16 -top-20 h-64 w-64 rounded-full bg-orange-400/60 blur-3xl" />
           <span aria-hidden="true" className="pointer-events-none absolute -right-12 bottom-[-3rem] h-72 w-72 rounded-full bg-pink-400/50 blur-3xl" />
           <span aria-hidden="true" className="pointer-events-none absolute right-1/3 top-0 h-44 w-44 rounded-full bg-cyan-300/40 blur-3xl" />
