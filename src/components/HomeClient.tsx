@@ -81,6 +81,16 @@ export function HomeClient({ articles, usingMock }: Props) {
     return [...articles, ...extra];
   }, [showBookmarksOnly, articles, bookmarkedExtras, articleIds]);
 
+  // 로고 클릭 → 처음 접속 상태로 리셋(전체 카테고리·검색어 비움·북마크 보기 해제·맨 위로).
+  const resetToInitial = () => {
+    setCategory("all");
+    setQuery("");
+    setShowBookmarksOnly(false);
+    if (typeof window !== "undefined") {
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+  };
+
   const filtered = useMemo(() => {
     const q = deferredQuery.trim().toLowerCase();
     return source.filter((a) => {
@@ -99,14 +109,19 @@ export function HomeClient({ articles, usingMock }: Props) {
     <div className="min-h-dvh text-zinc-900 dark:text-zinc-100">
       <header className="sticky top-0 z-30 border-b border-zinc-900/10 bg-[#FBF6EC]/80 backdrop-blur-md dark:border-white/10 dark:bg-[#0d0b14]/80">
         <div className="mx-auto flex max-w-6xl select-none flex-col gap-3 px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
-          <div className="flex items-center gap-2.5">
+          <button
+            type="button"
+            onClick={resetToInitial}
+            aria-label="처음 화면으로 (필터·검색 초기화)"
+            className="flex w-fit cursor-pointer items-center gap-2.5 rounded-xl transition-opacity hover:opacity-80 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-violet-500 active:scale-[0.98]"
+          >
             <div className="grain relative flex h-9 w-9 items-center justify-center overflow-hidden rounded-xl bg-gradient-to-br from-fuchsia-500 via-purple-500 to-orange-400 text-white shadow-[0_4px_14px_-4px_rgba(168,85,247,0.6)]">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="relative h-4 w-4">
                 <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83" />
               </svg>
             </div>
             <span className="font-display text-xl tracking-tight">AI 뉴스</span>
-          </div>
+          </button>
           <div className="flex items-center gap-2">
             <SearchInput value={query} onChange={setQuery} />
             <button
