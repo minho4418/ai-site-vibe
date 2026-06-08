@@ -213,7 +213,7 @@ export function ArticleCard({
               <span aria-hidden="true">✦</span> AI 요약
             </span>
           )}
-          <p className="line-clamp-2 text-sm text-zinc-600 dark:text-zinc-400">{summaryText}</p>
+          <p className="line-clamp-3 text-sm text-zinc-600 dark:text-zinc-400">{summaryText}</p>
         </a>
 
         <div
