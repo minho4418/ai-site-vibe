@@ -77,6 +77,11 @@ export function ArticleCard({
   const views = (article.views_count ?? 0) + (viewedLocally ? 1 : 0);
   const favicon = faviconUrl(article.url);
 
+  // 본문 요약: Groq 한국어 요약(ai_summary)이 있으면 우선 쓰고, 없으면 RSS 원문 요약으로 폴백.
+  const aiSummary = article.ai_summary?.trim();
+  const hasAiSummary = Boolean(aiSummary);
+  const summaryText = aiSummary || article.summary;
+
   // 카드(기사) 열 때: 조회수 낙관적 +1 + DB 증가(둘 다 세션당 1회만 효과).
   const handleOpen = () => {
     setViewedLocally(true);
@@ -202,7 +207,13 @@ export function ArticleCard({
           <h3 className="text-base font-semibold leading-snug text-zinc-900 underline-offset-2 decoration-violet-400 decoration-2 transition-colors group-hover/read:text-violet-600 group-hover/read:underline dark:text-zinc-100 dark:group-hover/read:text-violet-400">
             {article.title}
           </h3>
-          <p className="line-clamp-2 text-sm text-zinc-600 dark:text-zinc-400">{article.summary}</p>
+          {hasAiSummary && (
+            // AI 요약임을 알리는 작은 신호 — 원문 그대로가 아니라 가공된 한국어 요약임을 투명하게 표시.
+            <span className="inline-flex w-fit select-none items-center gap-1 rounded-md bg-violet-500/10 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-violet-600 dark:text-violet-400">
+              <span aria-hidden="true">✦</span> AI 요약
+            </span>
+          )}
+          <p className="line-clamp-2 text-sm text-zinc-600 dark:text-zinc-400">{summaryText}</p>
         </a>
 
         <div

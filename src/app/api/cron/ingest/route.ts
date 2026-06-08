@@ -1,5 +1,6 @@
 import Parser from "rss-parser";
 
+import { enrichSummaries } from "@/lib/ai-summary";
 import { classifyCategory, isAiRelated } from "@/lib/categorize";
 import { FEEDS } from "@/lib/feeds";
 import { enrichThumbnails } from "@/lib/og-image";
@@ -135,11 +136,21 @@ export async function GET(request: Request) {
     }
   }
 
+  // 새로 upsert 된(+ 아직 요약 없는 과거) 기사에 한국어 AI 요약을 채운다.
+  // 메인 upsert 와 분리된 별도 UPDATE 라 재수집해도 기존 요약을 덮어쓰지 않음. budget 으로 cron 60s 한도 보호.
+  let summarized = 0;
+  try {
+    summarized = await enrichSummaries(supabase, 30);
+  } catch (err) {
+    results.push({ source: "ai-summary", error: (err as Error).message });
+  }
+
   return Response.json({
     ok: true,
     ran_at: new Date().toISOString(),
     feeds: FEEDS.length,
     total_upserted: totalUpserted,
+    summarized,
     results,
   });
 }

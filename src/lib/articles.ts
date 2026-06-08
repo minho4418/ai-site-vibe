@@ -16,6 +16,7 @@ type ArticleRow = {
   source: string;
   category: string;
   summary: string | null;
+  ai_summary?: string | null;
   thumbnail_url: string | null;
   published_at: string;
   likes_count: number | null;
@@ -44,11 +45,16 @@ export async function getArticles(): Promise<{ articles: Article[]; usingMock: b
       .order("id", { ascending: false })
       .limit(60);
 
-  // views_count 컬럼이 있으면 함께 가져오고, 아직 SQL 을 안 돌려 컬럼이 없으면 views 없이 재조회한다.
+  // 선택 컬럼(views_count, ai_summary)이 있으면 함께 가져오고, 아직 SQL 을 안 돌려 없으면 단계적으로 빼고 재조회한다.
   // (실데이터 피드가 컬럼 미생성 때문에 mock 으로 떨어지지 않도록 graceful degradation)
-  let { data, error } = await query(`${BASE_COLS}, views_count`);
-  if (error) {
-    ({ data, error } = await query(BASE_COLS));
+  const COL_ATTEMPTS = [
+    `${BASE_COLS}, views_count, ai_summary`,
+    `${BASE_COLS}, views_count`,
+    BASE_COLS,
+  ];
+  let { data, error } = await query(COL_ATTEMPTS[0]);
+  for (let i = 1; error && i < COL_ATTEMPTS.length; i++) {
+    ({ data, error } = await query(COL_ATTEMPTS[i]));
   }
 
   if (error) {
@@ -68,6 +74,8 @@ export async function getArticles(): Promise<{ articles: Article[]; usingMock: b
     source: row.source,
     category: normalizeCategory(row.category),
     summary: row.summary ?? "",
+    // AI 한국어 요약이 있으면 우선 사용하고, 없으면 RSS 요약으로 폴백(소비처에서 처리).
+    ai_summary: row.ai_summary ?? null,
     thumbnail_url: row.thumbnail_url ?? null,
     published_at: row.published_at,
     likes_count: row.likes_count ?? 0,
