@@ -71,6 +71,69 @@ export async function summarizeArticle(
   }
 }
 
+// ── 상세 요약(모달용): 기사 본문 전체를 받아 한 줄 요약 + 핵심 포인트 불릿으로 구조화 ──
+
+export type DetailSummary = {
+  tldr: string;
+  points: string[];
+};
+
+const DETAIL_SYSTEM_PROMPT =
+  "너는 한국 개발자용 AI 뉴스 큐레이션 사이트의 요약 기자다. " +
+  "기사 제목과 본문을 읽고 JSON 으로만 답한다. 형식: {\"tldr\": string, \"points\": string[]}. " +
+  "tldr: 기사를 한 문장으로 요약(한국어, 최대 80자). " +
+  "points: 핵심 내용을 3~5개의 한국어 불릿으로 정리(각 항목 최대 100자, 사실 위주, 군더더기·머리말 없이). " +
+  "반드시 한국어로만 쓴다(영문 기사는 한국어로 번역). 과장/광고체 금지, 차분한 정보체. JSON 외 다른 텍스트 출력 금지.";
+
+/** 본문 텍스트로 상세 요약(tldr+points) 생성. 실패하면 null → 호출부에서 unavailable 처리. */
+export async function generateDetailSummary(
+  title: string,
+  body: string,
+  timeoutMs = 18_000,
+): Promise<DetailSummary | null> {
+  const apiKey = process.env.GROQ_API_KEY;
+  if (!apiKey || body.trim().length < 200) return null;
+
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), timeoutMs);
+  try {
+    const res = await fetch(GROQ_ENDPOINT, {
+      method: "POST",
+      signal: controller.signal,
+      headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
+      body: JSON.stringify({
+        // 상세 요약은 본문 전체(~2.5k 토큰/건)를 넣어 온디맨드로 자주 호출되므로,
+        // 일일 토큰 한도가 넉넉한 8b-instant 를 기본으로 쓴다(카드 요약 cron 의 70b 와 분리).
+        model: process.env.GROQ_DETAIL_MODEL || "llama-3.1-8b-instant",
+        temperature: 0.3,
+        max_tokens: 900,
+        // Groq(OpenAI 호환)의 JSON 모드 — 파싱 실패를 줄인다.
+        response_format: { type: "json_object" },
+        messages: [
+          { role: "system", content: DETAIL_SYSTEM_PROMPT },
+          { role: "user", content: `제목: ${title}\n\n본문:\n${body}` },
+        ],
+      }),
+    });
+    if (!res.ok) return null;
+    const data = (await res.json()) as { choices?: { message?: { content?: string } }[] };
+    const raw = data.choices?.[0]?.message?.content?.trim();
+    if (!raw) return null;
+
+    const parsed = JSON.parse(raw) as { tldr?: unknown; points?: unknown };
+    const tldr = typeof parsed.tldr === "string" ? parsed.tldr.trim() : "";
+    const points = Array.isArray(parsed.points)
+      ? parsed.points.filter((p): p is string => typeof p === "string" && p.trim().length > 0).map((p) => p.trim())
+      : [];
+    if (!tldr || points.length === 0) return null;
+    return { tldr, points: points.slice(0, 6) };
+  } catch {
+    return null;
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
 type ArticleRow = { id: string; title: string; summary: string | null };
 
 /**

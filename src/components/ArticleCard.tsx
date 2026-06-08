@@ -2,10 +2,20 @@
 
 import { useState } from "react";
 
+import { ArticleDetailModal } from "@/components/ArticleDetailModal";
 import { recordView } from "@/lib/articles-client";
 import { CATEGORY_COLORS, CATEGORY_LABELS } from "@/lib/categories";
 import { isFresh, timeAgo } from "@/lib/time";
 import type { Article } from "@/lib/types";
+
+// Google News 리다이렉트 URL 은 본문을 못 가져온다(상세 요약 불가) → 그런 기사엔 상세 버튼을 숨긴다.
+function canFetchBody(pageUrl: string): boolean {
+  try {
+    return new URL(pageUrl).hostname !== "news.google.com";
+  } catch {
+    return false;
+  }
+}
 
 // 썸네일이 없을 때 보여줄 카테고리별 그라데이션 대체 이미지.
 const CATEGORY_GRADIENTS: Record<Article["category"], string> = {
@@ -81,6 +91,9 @@ export function ArticleCard({
   const aiSummary = article.ai_summary?.trim();
   const hasAiSummary = Boolean(aiSummary);
   const summaryText = aiSummary || article.summary;
+  // 상세 요약 모달: 본문을 가져올 수 있는 기사(Google뉴스 제외)에서만 버튼 노출.
+  const [detailOpen, setDetailOpen] = useState(false);
+  const canDetail = canFetchBody(article.url);
 
   // 카드(기사) 열 때: 조회수 낙관적 +1 + DB 증가(둘 다 세션당 1회만 효과).
   const handleOpen = () => {
@@ -216,6 +229,18 @@ export function ArticleCard({
           <p className="line-clamp-3 text-sm text-zinc-600 dark:text-zinc-400">{summaryText}</p>
         </a>
 
+        {/* 상세 요약 보기: 클릭 시 본문 기반 상세 요약을 모달로 띄운다(Google뉴스 기사는 숨김). */}
+        {canDetail && (
+          <button
+            type="button"
+            onClick={() => setDetailOpen(true)}
+            className="inline-flex w-fit select-none items-center gap-1.5 rounded-lg bg-violet-500/10 px-2.5 py-1.5 text-xs font-semibold text-violet-700 transition-colors hover:bg-violet-500/20 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-violet-500 active:scale-95 dark:text-violet-300"
+          >
+            <span aria-hidden="true">✦</span> AI 요약 상세보기
+            <span aria-hidden="true" className="transition-transform group-hover:translate-x-0.5">→</span>
+          </button>
+        )}
+
         <div
           className={
             "mt-auto flex select-none items-center justify-between pt-2 transition-opacity duration-200 " +
@@ -279,6 +304,16 @@ export function ArticleCard({
           </button>
         </div>
       </div>
+
+      {detailOpen && (
+        <ArticleDetailModal
+          articleId={article.id}
+          title={article.title}
+          source={article.source}
+          url={article.url}
+          onClose={() => setDetailOpen(false)}
+        />
+      )}
     </article>
   );
 }
