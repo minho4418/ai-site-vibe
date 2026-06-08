@@ -13,6 +13,18 @@ body {
   height: 100%;
 }
 
+/* 입력 요소가 아닌 일반 콘텐츠(카드·히어로 등)를 클릭했을 때 텍스트 입력 캐럿이
+   깜빡이며 보이는 것을 막는다(캐럿 브라우징 등). 검색창 같은 실제 입력은 그대로. */
+body {
+  caret-color: transparent;
+}
+input,
+textarea,
+select,
+[contenteditable="true"] {
+  caret-color: auto;
+}
+
 /* ── 사이트 배경: 은은한 메시 그라데이션 블롭 (브랜드 컬러) ──────────────
    body 의 단색 위에 고정으로 깔리고(z-index:-1), 콘텐츠는 그 위에 그려진다.
    히어로의 fuchsia/purple/orange 무드를 화면 전체로 확장하되 가독성은 유지. */
