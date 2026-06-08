@@ -88,9 +88,7 @@ export function ArticleCard({
   const favicon = faviconUrl(article.url);
 
   // 본문 요약: Groq 한국어 요약(ai_summary)이 있으면 우선 쓰고, 없으면 RSS 원문 요약으로 폴백.
-  const aiSummary = article.ai_summary?.trim();
-  const hasAiSummary = Boolean(aiSummary);
-  const summaryText = aiSummary || article.summary;
+  const summaryText = article.ai_summary?.trim() || article.summary;
   // 상세 요약 모달: 본문을 가져올 수 있는 기사(Google뉴스 제외)에서만 버튼 노출.
   const [detailOpen, setDetailOpen] = useState(false);
   const canDetail = canFetchBody(article.url);
@@ -220,12 +218,6 @@ export function ArticleCard({
           <h3 className="text-base font-semibold leading-snug text-zinc-900 underline-offset-2 decoration-violet-400 decoration-2 transition-colors group-hover/read:text-violet-600 group-hover/read:underline dark:text-zinc-100 dark:group-hover/read:text-violet-400">
             {article.title}
           </h3>
-          {hasAiSummary && (
-            // AI 요약임을 알리는 작은 신호 — 원문 그대로가 아니라 가공된 한국어 요약임을 투명하게 표시.
-            <span className="inline-flex w-fit select-none items-center gap-1 rounded-md bg-violet-500/10 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-violet-600 dark:text-violet-400">
-              <span aria-hidden="true">✦</span> AI 요약
-            </span>
-          )}
           <p className="line-clamp-3 text-sm text-zinc-600 dark:text-zinc-400">{summaryText}</p>
         </a>
 
@@ -234,7 +226,7 @@ export function ArticleCard({
           <button
             type="button"
             onClick={() => setDetailOpen(true)}
-            className="inline-flex w-fit select-none items-center gap-1.5 rounded-lg bg-violet-500/10 px-2.5 py-1.5 text-xs font-semibold text-violet-700 transition-colors hover:bg-violet-500/20 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-violet-500 active:scale-95 dark:text-violet-300"
+            className="inline-flex w-fit cursor-pointer select-none items-center gap-1.5 rounded-lg bg-violet-500/10 px-2.5 py-1.5 text-xs font-semibold text-violet-700 transition-colors hover:bg-violet-500/20 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-violet-500 active:scale-95 dark:text-violet-300"
           >
             <span aria-hidden="true">✦</span> AI 요약 상세보기
             <span aria-hidden="true" className="transition-transform group-hover:translate-x-0.5">→</span>

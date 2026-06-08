@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { createPortal } from "react-dom";
 
 type DetailSummary = { tldr: string; points: string[] };
 type FetchState =
@@ -22,10 +23,13 @@ type Props = {
 // 기사 본문 기반 상세 요약(tldr + 핵심 포인트)을 받아 보여준다.
 export function ArticleDetailModal({ articleId, title, source, url, onClose }: Props) {
   const [state, setState] = useState<FetchState>({ status: "loading" });
+  // 재시도 버튼이 증가시키는 카운터 — 바뀌면 fetch effect 가 다시 돈다.
+  const [attempt, setAttempt] = useState(0);
 
   useEffect(() => {
     let alive = true;
     const ctrl = new AbortController();
+    setState({ status: "loading" });
     (async () => {
       try {
         const res = await fetch(`/api/article-summary?id=${encodeURIComponent(articleId)}`, {
@@ -36,7 +40,7 @@ export function ArticleDetailModal({ articleId, title, source, url, onClose }: P
         if (data.status === "ok" && data.summary) {
           setState({ status: "ok", summary: data.summary });
         } else if (data.status === "unavailable") {
-          // no_body/no_api_key 는 영구적, gen_failed(rate limit 등)는 일시적으로 본다.
+          // no_body/no_api_key 는 영구적, gen_failed(rate limit 등)는 일시적(재시도 가능)으로 본다.
           setState({ status: "unavailable", permanent: data.reason !== "gen_failed" });
         } else {
           setState({ status: "error" });
@@ -49,7 +53,9 @@ export function ArticleDetailModal({ articleId, title, source, url, onClose }: P
       alive = false;
       ctrl.abort();
     };
-  }, [articleId]);
+  }, [articleId, attempt]);
+
+  const retry = () => setAttempt((n) => n + 1);
 
   // Esc 로 닫기 + 모달 열려있는 동안 배경 스크롤 잠금.
   useEffect(() => {
@@ -65,7 +71,12 @@ export function ArticleDetailModal({ articleId, title, source, url, onClose }: P
     };
   }, [onClose]);
 
-  return (
+  // 카드 <article> 에 hover transform 이 걸려 있어, 카드 안에서 fixed 로 렌더하면
+  // 모달이 카드 박스 기준으로 잡혀 위치가 틀어지고 hover 마다 흔들린다.
+  // → portal 로 document.body 에 직접 렌더해 카드의 transform 컨테이닝 블록을 벗어난다.
+  if (typeof document === "undefined") return null;
+
+  return createPortal(
     <div
       role="dialog"
       aria-modal="true"
@@ -92,7 +103,7 @@ export function ArticleDetailModal({ articleId, title, source, url, onClose }: P
             type="button"
             onClick={onClose}
             aria-label="닫기"
-            className="-mr-1 -mt-1 inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-zinc-400 transition-colors hover:bg-zinc-100 hover:text-zinc-700 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-violet-500 active:scale-95 dark:hover:bg-zinc-800 dark:hover:text-zinc-200"
+            className="-mr-1 -mt-1 inline-flex h-8 w-8 shrink-0 cursor-pointer items-center justify-center rounded-full text-zinc-400 transition-colors hover:bg-zinc-100 hover:text-zinc-700 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-violet-500 active:scale-95 dark:hover:bg-zinc-800 dark:hover:text-zinc-200"
           >
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" className="h-5 w-5">
               <path d="M18 6 6 18M6 6l12 12" />
@@ -126,26 +137,30 @@ export function ArticleDetailModal({ articleId, title, source, url, onClose }: P
           )}
 
           {state.status === "unavailable" && (
-            <div className="py-8 text-center text-sm text-zinc-500 dark:text-zinc-400">
+            <div className="flex flex-col items-center gap-4 py-8 text-center text-sm text-zinc-500 dark:text-zinc-400">
               {state.permanent ? (
-                <>
+                <p>
                   이 기사는 본문을 가져올 수 없어 상세 요약을 만들지 못했어요.
                   <br />
                   원문에서 직접 확인해 주세요.
-                </>
+                </p>
               ) : (
                 <>
-                  지금은 요약 생성이 잠시 지연되고 있어요.
-                  <br />
-                  잠시 후 다시 시도해 주세요.
+                  <p>
+                    요약 생성이 잠시 지연되고 있어요. (무료 API 분당 한도)
+                    <br />
+                    잠시 후 다시 시도해 주세요.
+                  </p>
+                  <RetryButton onClick={retry} />
                 </>
               )}
             </div>
           )}
 
           {state.status === "error" && (
-            <div className="py-8 text-center text-sm text-rose-500">
-              요약을 불러오는 중 문제가 생겼어요. 잠시 후 다시 시도해 주세요.
+            <div className="flex flex-col items-center gap-4 py-8 text-center text-sm text-rose-500">
+              <p>요약을 불러오는 중 문제가 생겼어요.</p>
+              <RetryButton onClick={retry} />
             </div>
           )}
         </div>
@@ -163,6 +178,23 @@ export function ArticleDetailModal({ articleId, title, source, url, onClose }: P
           </a>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body,
+  );
+}
+
+function RetryButton({ onClick }: { onClick: () => void }) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className="inline-flex cursor-pointer items-center gap-1.5 rounded-lg bg-violet-500/10 px-3.5 py-1.5 text-xs font-semibold text-violet-700 transition-colors hover:bg-violet-500/20 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-violet-500 active:scale-95 dark:text-violet-300"
+    >
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-3.5 w-3.5">
+        <path d="M23 4v6h-6M1 20v-6h6" />
+        <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15" />
+      </svg>
+      다시 시도
+    </button>
   );
 }
