@@ -1,6 +1,7 @@
 import Parser from "rss-parser";
 
 import { enrichSummaries } from "@/lib/ai-summary";
+import type { CategoryId } from "@/lib/categories";
 import { classifyCategory, isAiRelated } from "@/lib/categorize";
 import { FEEDS } from "@/lib/feeds";
 import { enrichThumbnails } from "@/lib/og-image";
@@ -14,16 +15,25 @@ export const maxDuration = 60;
 type FeedResult = {
   source: string;
   fetched?: number;
-  upserted?: number;
+  // 근접중복 제거 후 이 소스에서 살아남아 저장 대상이 된 수.
+  kept?: number;
   error?: string;
-  // 임시 진단용 — RSS 첫 항목의 시간 후보를 그대로 보여줌
-  debug_first_item?: Record<string, string | undefined>;
 };
 
 // rss-parser 가 RSS 2.0 의 pubDate 는 자동으로 isoDate 로 만들어주지만,
 // Atom 의 <published>/<updated>, Dublin Core 의 <dc:date> 는 customFields 로 명시해야 가져온다.
 const DATE_FIELDS = ["isoDate", "pubDate", "published", "updated", "dc:date", "date"] as const;
 type RawItem = Partial<Record<(typeof DATE_FIELDS)[number], string>>;
+
+type ArticleRow = {
+  url: string;
+  title: string;
+  source: string;
+  category: Exclude<CategoryId, "all">;
+  summary: string;
+  thumbnail_url: string | null;
+  published_at: string;
+};
 
 function pickPublishedAt(item: RawItem, ingestStart: number, index: number): string {
   for (const key of DATE_FIELDS) {
@@ -34,6 +44,26 @@ function pickPublishedAt(item: RawItem, ingestStart: number, index: number): str
   }
   // RSS 가 어떤 시간 필드도 안 주는 경우 — 같은 ingest 안에서 index 만큼 1초씩 과거로 흩뿌려 순서 보존.
   return new Date(ingestStart - index * 1000).toISOString();
+}
+
+function isGoogleNewsUrl(url: string): boolean {
+  try {
+    return new URL(url).hostname.endsWith("news.google.com");
+  } catch {
+    return false;
+  }
+}
+
+// 근접중복 판별용 제목 키.
+// Google News 는 제목에 " - 매체명" 을 붙이므로 그 접미사를 떼고, 영문/숫자/한글만 남겨 소문자화한다.
+// → 같은 통신사 기사를 여러 매체가 받아써도(와이어 카피) 한 건으로 묶인다. 같은 사건의 직링크/구글뉴스 중복도 흡수.
+function titleKey(title: string, isGoogleNews: boolean): string {
+  let t = title;
+  if (isGoogleNews) t = t.replace(/\s+[-–—|]\s+[^-–—|]+$/, "");
+  return t
+    .toLowerCase()
+    .replace(/[^a-z0-9가-힣]+/g, "")
+    .slice(0, 64);
 }
 
 export async function GET(request: Request) {
@@ -65,21 +95,22 @@ export async function GET(request: Request) {
     headers: {
       "User-Agent":
         "Mozilla/5.0 (compatible; ai-news-bot/1.0; +https://github.com/your-handle/ai-news)",
+      // 일부 매체(예: 네이버 D2)는 rss-parser 기본 Accept 를 406 으로 거부 → RSS 리더 표준 Accept 명시.
+      Accept:
+        "application/atom+xml, application/rss+xml, application/xml;q=0.9, text/xml;q=0.8, */*;q=0.5",
     },
   });
 
-  const results: FeedResult[] = [];
-  let totalUpserted = 0;
   // 같은 ingest 안에서 시간 정보가 빠진 글들도 RSS 순서를 보존하도록 fallback 의 기준점.
   const ingestStart = Date.now();
-  // RSS 에 이미지가 없는 직링크 기사에 og:image 를 채우는 전체 예산(cron 60s 한도 보호). 신규 직링크는 보통 이보다 적다.
-  let ogBudget = 40;
 
-  for (const feed of FEEDS) {
-    try {
+  // 1) 모든 피드를 병렬로 가져와 후보 row 를 수집한다.
+  //    피드 하나가 죽어도(allSettled) 나머지는 계속 진행. 피드 수가 늘어도 순차 대신 병렬이라 cron 60s 안에 든다.
+  const settled = await Promise.allSettled(
+    FEEDS.map(async (feed) => {
       const parsed = await parser.parseURL(feed.url);
       const limit = feed.limit ?? 15;
-      const rows = parsed.items
+      const rows: ArticleRow[] = parsed.items
         .filter((item) => item.link && item.title)
         .map((item) => ({
           item,
@@ -88,6 +119,8 @@ export async function GET(request: Request) {
         }))
         // 종합 피드(aiOnly)는 AI 관련 글만 남긴다. slice 보다 먼저 걸러야 limit 개를 채운다.
         .filter(({ title, summary }) => !feed.aiOnly || isAiRelated(`${title} ${summary}`))
+        // 품질 게이트: 제목이 지나치게 짧은(공백 제외 6자 미만) 항목은 제외(빈/깨진 제목 방지).
+        .filter(({ title }) => title.replace(/\s/g, "").length >= 6)
         .slice(0, limit)
         .map(({ item, title, summary }, index) => ({
           url: normalizeUrl(item.link!),
@@ -97,47 +130,70 @@ export async function GET(request: Request) {
           category: classifyCategory(`${title} ${summary}`) ?? feed.category,
           summary,
           thumbnail_url: extractThumbnail(item),
-          // RSS 가 시간을 안 주면(예: 일부 Google News, 한국 RSS) 같은 시각 fallback 으로 동률이 생긴다.
-          // → ingest 시작 시점에서 index*1초 만큼 과거로 분산시켜 RSS 항목 순서(최신 → 오래된)를 그대로 보존.
+          // RSS 가 시간을 안 주면 ingest 시작 시점에서 index*1초 만큼 과거로 분산시켜 RSS 순서(최신→오래된)를 보존.
           published_at: pickPublishedAt(item, ingestStart, index),
         }));
+      return rows;
+    }),
+  );
 
-      if (rows.length === 0) {
-        results.push({ source: feed.source, fetched: 0, upserted: 0 });
-        continue;
-      }
+  const results: FeedResult[] = [];
+  const candidates: ArticleRow[] = [];
+  const fetchedBySource = new Map<string, number>();
+  settled.forEach((s, i) => {
+    const feed = FEEDS[i];
+    if (s.status === "fulfilled") {
+      fetchedBySource.set(feed.source, s.value.length);
+      candidates.push(...s.value);
+    } else {
+      results.push({ source: feed.source, error: (s.reason as Error).message });
+    }
+  });
 
-      // RSS 에 이미지가 없는 직링크 기사들에 한해 og:image 보강(Google News 는 자동 제외).
-      ogBudget = await enrichThumbnails(rows, ogBudget);
+  // 2) 전 피드를 가로질러 근접중복 제거. 같은 제목키면 직링크를 Google News 보다 우선해 1건만 남긴다.
+  //    Map 은 삽입 순서를 보존하므로 먼저 들어온(피드 우선순위 높은) 직링크가 유지된다.
+  const seen = new Map<string, ArticleRow>();
+  for (const row of candidates) {
+    const gnews = isGoogleNewsUrl(row.url);
+    const key = titleKey(row.title, gnews) || `url:${row.url}`;
+    const existing = seen.get(key);
+    if (!existing) {
+      seen.set(key, row);
+      continue;
+    }
+    // 기존이 Google News 이고 새 후보가 직링크면 교체(본문·og:image 가능한 직링크 우선).
+    if (isGoogleNewsUrl(existing.url) && !gnews) seen.set(key, row);
+  }
+  const deduped = [...seen.values()];
 
-      // ignoreDuplicates=false → 같은 URL 의 row 는 새 RSS 데이터로 갱신.
-      // articles.likes_count 는 rows 에 포함하지 않으므로 기존 값이 유지됨.
-      const { error, count } = await supabase
-        .from("articles")
-        .upsert(rows, { onConflict: "url", count: "exact" });
+  const keptBySource = new Map<string, number>();
+  for (const row of deduped) {
+    keptBySource.set(row.source, (keptBySource.get(row.source) ?? 0) + 1);
+  }
+  for (const [source, fetched] of fetchedBySource) {
+    results.push({ source, fetched, kept: keptBySource.get(source) ?? 0 });
+  }
 
-      // 임시 진단: 첫 RSS item 이 어떤 시간 필드를 가지고 있는지 응답으로 노출 (확인 후 제거 예정).
-      const firstItem = (parsed.items[0] ?? {}) as unknown as Record<string, unknown>;
-      const debug_first_item: Record<string, string | undefined> = {};
-      for (const key of DATE_FIELDS) {
-        const v = firstItem[key];
-        if (typeof v === "string") debug_first_item[key] = v;
-      }
+  // 3) RSS 에 이미지가 없는 직링크 기사에 og:image 보강(Google News 는 자동 제외). 전체 dedup 셋에 한 번만.
+  let ogBudget = 40;
+  ogBudget = await enrichThumbnails(deduped, ogBudget);
 
-      if (error) {
-        results.push({ source: feed.source, fetched: rows.length, error: error.message, debug_first_item });
-      } else {
-        const upserted = count ?? rows.length;
-        totalUpserted += upserted;
-        results.push({ source: feed.source, fetched: rows.length, upserted, debug_first_item });
-      }
-    } catch (err) {
-      results.push({ source: feed.source, error: (err as Error).message });
+  // 4) 단일 upsert. ignoreDuplicates=false → 같은 URL row 는 새 RSS 데이터로 갱신.
+  //    articles.likes_count / ai_summary 는 rows 에 없으므로 기존 값이 유지된다.
+  let totalUpserted = 0;
+  if (deduped.length > 0) {
+    const { error, count } = await supabase
+      .from("articles")
+      .upsert(deduped, { onConflict: "url", count: "exact" });
+    if (error) {
+      results.push({ source: "upsert", error: error.message });
+    } else {
+      totalUpserted = count ?? deduped.length;
     }
   }
 
-  // 새로 upsert 된(+ 아직 요약 없는 과거) 기사에 한국어 AI 요약을 채운다.
-  // 메인 upsert 와 분리된 별도 UPDATE 라 재수집해도 기존 요약을 덮어쓰지 않음. budget 으로 cron 60s 한도 보호.
+  // 5) 새로 upsert 된(+ 아직 요약 없는 과거) 기사에 한국어 AI 요약을 채운다.
+  //    메인 upsert 와 분리된 별도 UPDATE 라 재수집해도 기존 요약을 덮어쓰지 않음. budget 으로 cron 60s 한도 보호.
   let summarized = 0;
   try {
     summarized = await enrichSummaries(supabase, 30);
@@ -149,6 +205,9 @@ export async function GET(request: Request) {
     ok: true,
     ran_at: new Date().toISOString(),
     feeds: FEEDS.length,
+    candidates: candidates.length,
+    deduped: deduped.length,
+    removed_dupes: candidates.length - deduped.length,
     total_upserted: totalUpserted,
     summarized,
     results,

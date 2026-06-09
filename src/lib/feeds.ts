@@ -82,4 +82,25 @@ export const FEEDS: FeedSource[] = [
     category: "Tools",
     limit: 20,
   },
+
+  // ── 해외 AI 전문 매체·연구 블로그 (직링크 → 본문/og:image 양호) ──────────
+  // AI 전용 피드라 aiOnly 불필요. 카테고리는 classifyCategory 가 제목으로 재분류, 아래는 fallback.
+  { url: "https://blog.google/technology/ai/rss/", source: "Google AI", category: "LLM", limit: 6 },
+  { url: "https://deepmind.google/blog/rss.xml", source: "Google DeepMind", category: "LLM", limit: 6 },
+  { url: "https://huggingface.co/blog/feed.xml", source: "Hugging Face", category: "Practice", limit: 8 },
+  { url: "https://www.technologyreview.com/topic/artificial-intelligence/feed/", source: "MIT Tech Review", category: "LLM", limit: 6 },
+  { url: "https://venturebeat.com/category/ai/feed/", source: "VentureBeat", category: "LLM", limit: 8 },
+  { url: "https://arstechnica.com/ai/feed/", source: "Ars Technica", category: "LLM", limit: 8 },
+  // 고신호 개인 블로그/뉴스레터 (AI 엔지니어들이 실제로 보는 곳)
+  { url: "https://simonwillison.net/atom/everything/", source: "Simon Willison", category: "Tools", limit: 8 },
+  { url: "https://www.latent.space/feed", source: "Latent Space", category: "Practice", limit: 6 },
+
+  // ── 국내 기업 기술블로그 (종합 개발 피드 → aiOnly 로 AI 글만 수집) ──────
+  // 실무 관점의 AI 적용 사례가 주력이라 fallback 은 Practice. 대부분 비-AI라 매 실행 0~2건 기여.
+  { url: "https://d2.naver.com/d2.atom", source: "네이버 D2", category: "Practice", aiOnly: true, limit: 15 },
+  { url: "https://tech.kakao.com/feed/", source: "카카오 기술블로그", category: "Practice", aiOnly: true, limit: 10 },
+  { url: "https://techblog.woowahan.com/feed/", source: "우아한형제들", category: "Practice", aiOnly: true, limit: 10 },
+  { url: "https://toss.tech/rss.xml", source: "토스 기술블로그", category: "Practice", aiOnly: true, limit: 10 },
+  { url: "https://medium.com/feed/daangn", source: "당근 기술블로그", category: "Practice", aiOnly: true, limit: 10 },
+  { url: "https://techblog.lycorp.co.jp/ko/feed/index.xml", source: "LINE 기술블로그", category: "Practice", aiOnly: true, limit: 15 },
 ];
