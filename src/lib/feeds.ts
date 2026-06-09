@@ -9,6 +9,11 @@ export type FeedSource = {
   limit?: number;
   /** 종합 피드(개발 뉴스 전반)에서 AI 관련 글만 수집할 때 true. */
   aiOnly?: boolean;
+  /**
+   * true 면 키워드 재분류(classifyCategory)를 건너뛰고 category 를 그대로 쓴다.
+   * 소스 자체가 곧 카테고리인 경우용(예: GitHub 트렌딩 = 전부 OpenSource).
+   */
+  forceCategory?: boolean;
 };
 
 // 한국어 AI 뉴스는 Google News 검색 RSS(한국어 로캘)로 가져온다.
@@ -106,6 +111,16 @@ export const FEEDS: FeedSource[] = [
   { url: "https://blog.google/technology/ai/rss/", source: "Google AI", category: "Research", limit: 6 },
   { url: "https://deepmind.google/blog/rss.xml", source: "Google DeepMind", category: "Research", limit: 6 },
   { url: "https://huggingface.co/blog/feed.xml", source: "Hugging Face", category: "OpenSource", limit: 8 },
+  // GitHub 일간 트렌딩(전 언어). repo 는 본질적으로 오픈소스라 forceCategory 로 OpenSource 고정.
+  // aiOnly 로 AI 관련 repo만 남김(요즘 트렌딩은 대부분 AI). 정적 호스팅(GitHub Pages) RSS — 죽으면 graceful 스킵.
+  {
+    url: "https://mshibanami.github.io/GitHubTrendingRSS/daily/all.xml",
+    source: "GitHub 트렌딩",
+    category: "OpenSource",
+    aiOnly: true,
+    forceCategory: true,
+    limit: 12,
+  },
   { url: "https://www.technologyreview.com/topic/artificial-intelligence/feed/", source: "MIT Tech Review", category: "LLM", limit: 6 },
   { url: "https://venturebeat.com/category/ai/feed/", source: "VentureBeat", category: "LLM", limit: 8 },
   { url: "https://arstechnica.com/ai/feed/", source: "Ars Technica", category: "LLM", limit: 8 },

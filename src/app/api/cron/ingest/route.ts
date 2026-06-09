@@ -126,8 +126,10 @@ export async function GET(request: Request) {
           url: normalizeUrl(item.link!),
           title,
           source: feed.source,
-          // 키워드로 카테고리를 재분류, 실패 시 피드 기본값 사용.
-          category: classifyCategory(`${title} ${summary}`) ?? feed.category,
+          // forceCategory 면 피드 기본값 고정, 아니면 키워드로 재분류(실패 시 기본값).
+          category: feed.forceCategory
+            ? feed.category
+            : classifyCategory(`${title} ${summary}`) ?? feed.category,
           summary,
           thumbnail_url: extractThumbnail(item),
           // RSS 가 시간을 안 주면 ingest 시작 시점에서 index*1초 만큼 과거로 분산시켜 RSS 순서(최신→오래된)를 보존.
