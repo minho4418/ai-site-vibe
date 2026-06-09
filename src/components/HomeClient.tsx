@@ -207,8 +207,7 @@ export function HomeClient({ articles, usingMock }: Props) {
         )}
 
         {filtered.length > 0 && (
-          <div className="mb-5 flex items-center justify-between gap-3">
-            <p className="text-sm font-bold text-zinc-500 dark:text-zinc-400">{filtered.length}개</p>
+          <div className="mb-5 flex items-center justify-end">
             <div
               role="tablist"
               aria-label="정렬 기준"
