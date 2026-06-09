@@ -21,7 +21,10 @@ function canFetchBody(pageUrl: string): boolean {
 const CATEGORY_GRADIENTS: Record<Article["category"], string> = {
   Tools: "from-violet-500 via-purple-500 to-fuchsia-600",
   LLM: "from-sky-500 via-blue-500 to-indigo-600",
+  OpenSource: "from-fuchsia-500 via-pink-500 to-purple-600",
+  Research: "from-cyan-500 via-teal-500 to-sky-600",
   Practice: "from-emerald-500 via-teal-500 to-cyan-600",
+  Infra: "from-orange-500 via-red-500 to-amber-600",
   Career: "from-amber-500 via-orange-500 to-rose-500",
   Startup: "from-rose-500 via-pink-500 to-fuchsia-600",
   Contest: "from-lime-500 via-green-500 to-emerald-600",

@@ -9,7 +9,7 @@ const CATEGORY_SET = new Set<string>(CATEGORIES.filter((c) => c.id !== "all").ma
 const FALLBACK_CATEGORY: Article["category"] = "LLM";
 
 // 홈에 표출할 기사 수.
-const FEED_SIZE = 60;
+const FEED_SIZE = 80;
 // 한 소스가 홈 상위를 독식하지 못하도록 소스당 상한. 초과분은 다른 소스로 자리를 양보한다.
 const MAX_PER_SOURCE = 5;
 // 솎아내기(soft-cap) 후에도 FEED_SIZE 를 채우려면 후보를 넉넉히 가져온다.

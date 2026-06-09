@@ -63,6 +63,24 @@ export const FEEDS: FeedSource[] = [
     category: "Contest",
     limit: 10,
   },
+  {
+    url: googleNewsKR('엔비디아 GPU OR "AI 반도체" OR "AI 칩" OR "데이터센터" OR "추론 비용" OR HBM OR 파운드리'),
+    source: "AI 인프라 (Google뉴스)",
+    category: "Infra",
+    limit: 10,
+  },
+  {
+    url: googleNewsKR('"AI 논문" OR "AI 연구" OR 딥마인드 OR "AI 벤치마크" OR "AI 학회" OR "거대언어모델 연구"'),
+    source: "AI 연구 (Google뉴스)",
+    category: "Research",
+    limit: 10,
+  },
+  {
+    url: googleNewsKR('"오픈소스 AI" OR "오픈 모델" OR 허깅페이스 OR "공개 모델" OR "오픈 웨이트" OR 라마 모델'),
+    source: "오픈소스 AI (Google뉴스)",
+    category: "OpenSource",
+    limit: 10,
+  },
 
   // ── 영어 원문 소스 (한/영 균형) ──────────────────────────────────
   { url: "https://openai.com/news/rss.xml", source: "OpenAI", category: "LLM" },
@@ -85,9 +103,9 @@ export const FEEDS: FeedSource[] = [
 
   // ── 해외 AI 전문 매체·연구 블로그 (직링크 → 본문/og:image 양호) ──────────
   // AI 전용 피드라 aiOnly 불필요. 카테고리는 classifyCategory 가 제목으로 재분류, 아래는 fallback.
-  { url: "https://blog.google/technology/ai/rss/", source: "Google AI", category: "LLM", limit: 6 },
-  { url: "https://deepmind.google/blog/rss.xml", source: "Google DeepMind", category: "LLM", limit: 6 },
-  { url: "https://huggingface.co/blog/feed.xml", source: "Hugging Face", category: "Practice", limit: 8 },
+  { url: "https://blog.google/technology/ai/rss/", source: "Google AI", category: "Research", limit: 6 },
+  { url: "https://deepmind.google/blog/rss.xml", source: "Google DeepMind", category: "Research", limit: 6 },
+  { url: "https://huggingface.co/blog/feed.xml", source: "Hugging Face", category: "OpenSource", limit: 8 },
   { url: "https://www.technologyreview.com/topic/artificial-intelligence/feed/", source: "MIT Tech Review", category: "LLM", limit: 6 },
   { url: "https://venturebeat.com/category/ai/feed/", source: "VentureBeat", category: "LLM", limit: 8 },
   { url: "https://arstechnica.com/ai/feed/", source: "Ars Technica", category: "LLM", limit: 8 },
