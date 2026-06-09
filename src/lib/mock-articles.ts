@@ -118,7 +118,7 @@ export const MOCK_ARTICLES: Article[] = [
     title: "신입 개발자 채용 비중 53%→37%… AI가 바꾸는 IT 채용 시장",
     url: "https://www.etnews.com/2026/ai-hiring-shift",
     source: "전자신문",
-    category: "Career",
+    category: "LLM",
     summary: "3년 미만 신입은 줄고 3년 이상 경력자 수요는 급증. 요구 역량도 'AI 협업'으로 이동.",
     thumbnail_url: "https://placehold.co/640x360/065f46/d1fae5?text=AI+Hiring",
     published_at: hoursAgo(55),

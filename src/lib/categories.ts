@@ -1,5 +1,5 @@
 // 한국 실무 개발자 관점으로 재편한 카테고리.
-// 개발툴 / 모델·LLM / 오픈소스 / 연구·논문 / 실무·구축 / 인프라·HW / 커리어 / 창업 / 공모전
+// 개발툴 / 모델·LLM / 오픈소스 / 연구·논문 / 실무·구축 / 인프라·HW / 창업 / 공모전
 export const CATEGORIES = [
   { id: "all", label: "전체" },
   { id: "Tools", label: "개발툴" },
@@ -8,7 +8,6 @@ export const CATEGORIES = [
   { id: "Research", label: "연구·논문" },
   { id: "Practice", label: "실무·구축" },
   { id: "Infra", label: "인프라·HW" },
-  { id: "Career", label: "커리어" },
   { id: "Startup", label: "창업" },
   { id: "Contest", label: "공모전" },
 ] as const;
@@ -31,7 +30,6 @@ export const CATEGORY_CHIP_ACTIVE: Record<CategoryId, string> = {
   Research: "bg-cyan-600 text-white",
   Practice: "bg-emerald-600 text-white",
   Infra: "bg-orange-600 text-white",
-  Career: "bg-amber-400 text-zinc-900",
   Startup: "bg-rose-600 text-white",
   Contest: "bg-lime-500 text-zinc-900",
 };
@@ -43,7 +41,6 @@ export const CATEGORY_COLORS: Record<Exclude<CategoryId, "all">, string> = {
   Research: "text-cyan-700 ring-cyan-500/40 dark:text-cyan-300",
   Practice: "text-emerald-700 ring-emerald-500/40 dark:text-emerald-300",
   Infra: "text-orange-700 ring-orange-500/40 dark:text-orange-300",
-  Career: "text-amber-700 ring-amber-500/40 dark:text-amber-300",
   Startup: "text-rose-700 ring-rose-500/40 dark:text-rose-300",
   Contest: "text-lime-700 ring-lime-500/40 dark:text-lime-300",
 };

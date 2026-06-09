@@ -7,7 +7,7 @@ type Cat = Exclude<CategoryId, "all">;
 const AI_SIGNAL =
   /\b(a\.?i\.?|llm|gpt|claude|gemini|llama|mistral|deepseek|qwen|genai|rag|mcp|agent(ic)?)\b|인공지능|머신러닝|딥러닝|생성형|언어\s?모델|에이전트|챗봇|파인튜닝|임베딩|오픈ai|앤트로픽|코파일럿|바이브\s?코딩/i;
 
-// 우선순위가 곧 분류 순서다(위에서부터 먼저 매칭): 공모전 > 창업 > 채용 > 인프라·HW >
+// 우선순위가 곧 분류 순서다(위에서부터 먼저 매칭): 공모전 > 창업 > 인프라·HW >
 // 개발툴 > 오픈소스 > 연구·논문 > 실무·구축 > 모델·LLM.
 // (특수·구체 키워드를 먼저 잡고, 넓은 모델 키워드는 마지막 fallback 으로 둔다)
 const RULES: Array<[Cat, RegExp]> = [
@@ -18,10 +18,6 @@ const RULES: Array<[Cat, RegExp]> = [
   [
     "Startup",
     /창업|스타트업|\bstartup\b|투자\s?유치|시드\s?투자|시리즈\s?[a-d]\b|액셀러레이터|벤처\s?캐피탈|\bvc\b|유니콘|\b(funding round|seed round)\b/i,
-  ],
-  [
-    "Career",
-    /채용|연봉|취업|커리어|이직|일자리|구조조정|감원|개발자\s?수요|노동\s?시장|몸값|\b(hiring|layoffs?|recruit\w*|job market)\b/i,
   ],
   // 인프라·HW: GPU/반도체/데이터센터/추론비용. 모델·실무 키워드보다 먼저 잡아야 "엔비디아 H200" 류가 LLM 으로 안 샌다.
   [

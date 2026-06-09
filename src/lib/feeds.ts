@@ -51,12 +51,6 @@ export const FEEDS: FeedSource[] = [
     limit: 12,
   },
   {
-    url: googleNewsKR('"개발자 채용" OR "AI 개발자" OR "개발자 연봉" OR "IT 이직" OR "개발자 일자리"'),
-    source: "개발자 채용 (Google뉴스)",
-    category: "Career",
-    limit: 10,
-  },
-  {
     url: googleNewsKR('"AI 스타트업" OR "AI 창업" OR "테크 스타트업" OR "스타트업 투자 유치" OR 액셀러레이터'),
     source: "창업·스타트업 (Google뉴스)",
     category: "Startup",
