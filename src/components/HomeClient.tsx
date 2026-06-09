@@ -7,7 +7,7 @@ import { CategoryFilter } from "@/components/CategoryFilter";
 import { SearchInput } from "@/components/SearchInput";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { fetchArticlesByIds } from "@/lib/articles-client";
-import type { CategoryId } from "@/lib/categories";
+import { CATEGORIES, type CategoryId } from "@/lib/categories";
 import type { Article } from "@/lib/types";
 import { useBookmarks } from "@/lib/use-bookmarks";
 import { useDeviceId } from "@/lib/use-device-id";
@@ -33,10 +33,15 @@ const SORT_OPTIONS: { key: SortKey; label: string }[] = [
 
 export function HomeClient({ articles, usingMock }: Props) {
   const [category, setCategory] = useState<CategoryId>("all");
+  // 모바일에서 카테고리 탭(9개)이 3~4줄로 펼쳐져 sticky 헤더가 화면을 덮는 걸 막기 위한 접기/펼치기.
+  // 데스크탑(sm+)은 항상 펼쳐 두므로 이 상태는 모바일에만 영향.
+  const [catOpen, setCatOpen] = useState(false);
   const [showBookmarksOnly, setShowBookmarksOnly] = useState(false);
   const [sortBy, setSortBy] = useState<SortKey>("latest");
   const [query, setQuery] = useState("");
   const deferredQuery = useDeferredValue(query);
+
+  const activeCategoryLabel = CATEGORIES.find((c) => c.id === category)?.label ?? "전체";
 
   const deviceId = useDeviceId();
   const { set: likedSet, overrides: likesOverrides, toggle: toggleLike, hydrated: likedHydrated } = useLikes(deviceId);
@@ -166,8 +171,38 @@ export function HomeClient({ articles, usingMock }: Props) {
             <ThemeToggle />
           </div>
         </div>
-        <div className="mx-auto max-w-6xl overflow-x-auto px-4 pb-3">
-          <CategoryFilter active={category} onChange={setCategory} counts={counts} />
+        <div className="mx-auto max-w-6xl px-4 pb-3">
+          {/* 모바일 전용 토글: 접힌 상태에선 현재 카테고리 + 펼치기 버튼만 노출 → 헤더 높이 절약 */}
+          <button
+            type="button"
+            onClick={() => setCatOpen((v) => !v)}
+            aria-expanded={catOpen}
+            aria-controls="category-filter"
+            className="flex w-full items-center justify-between gap-2 rounded-full border-2 border-zinc-900/10 bg-white/70 px-4 py-2 text-sm font-bold text-zinc-700 transition-colors hover:bg-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-violet-500 active:scale-[0.99] dark:border-white/15 dark:bg-white/5 dark:text-zinc-300 dark:hover:bg-white/10 sm:hidden"
+          >
+            <span className="flex items-center gap-1.5">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4 text-zinc-500 dark:text-zinc-400">
+                <path d="M3 6h18M7 12h10M11 18h2" />
+              </svg>
+              카테고리
+              <span className="text-zinc-400 dark:text-zinc-500">·</span>
+              <span className="text-violet-600 dark:text-violet-400">{activeCategoryLabel}</span>
+            </span>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className={"h-4 w-4 text-zinc-400 transition-transform " + (catOpen ? "rotate-180" : "")}>
+              <path d="m6 9 6 6 6-6" />
+            </svg>
+          </button>
+          {/* 탭: 데스크탑은 항상 표시, 모바일은 catOpen 일 때만 */}
+          <div id="category-filter" className={(catOpen ? "mt-2 block" : "hidden") + " sm:mt-0 sm:block"}>
+            <CategoryFilter
+              active={category}
+              onChange={(next) => {
+                setCategory(next);
+                setCatOpen(false); // 모바일: 선택하면 자동으로 접어 헤더를 다시 슬림하게
+              }}
+              counts={counts}
+            />
+          </div>
         </div>
       </header>
 
