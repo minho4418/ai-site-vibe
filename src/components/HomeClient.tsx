@@ -22,9 +22,19 @@ type Props = {
 // 단 조회 0 인 글(아무도 안 누른 글)은 후보에서 제외해 모든 카드가 인기가 되는 걸 막는다.
 const HOT_TOP_FRACTION = 0.2;
 
+// 피드 정렬 기준. latest = 서버 순서(최신 + 소스당 상한 분산) 그대로,
+// popular = 조회수순, likes = 좋아요순. popular/likes 는 동점이면 stable sort 로 latest(분산) 순서를 보존.
+type SortKey = "latest" | "popular" | "likes";
+const SORT_OPTIONS: { key: SortKey; label: string }[] = [
+  { key: "latest", label: "최신순" },
+  { key: "popular", label: "인기순" },
+  { key: "likes", label: "좋아요순" },
+];
+
 export function HomeClient({ articles, usingMock }: Props) {
   const [category, setCategory] = useState<CategoryId>("all");
   const [showBookmarksOnly, setShowBookmarksOnly] = useState(false);
+  const [sortBy, setSortBy] = useState<SortKey>("latest");
   const [query, setQuery] = useState("");
   const deferredQuery = useDeferredValue(query);
 
@@ -86,6 +96,7 @@ export function HomeClient({ articles, usingMock }: Props) {
     setCategory("all");
     setQuery("");
     setShowBookmarksOnly(false);
+    setSortBy("latest");
     if (typeof window !== "undefined") {
       window.scrollTo({ top: 0, behavior: "smooth" });
     }
@@ -104,6 +115,18 @@ export function HomeClient({ articles, usingMock }: Props) {
       );
     });
   }, [source, category, deferredQuery, showBookmarksOnly, bookmarkedSet]);
+
+  // 정렬: latest 는 서버 순서 유지(재정렬하면 cap 으로 분산시킨 게 가짜시간으로 다시 쏠림).
+  // popular/likes 만 재정렬하며, 동점(대부분 0)은 Array.sort 안정성으로 latest(분산) 순서를 보존한다.
+  // 좋아요는 표시값과 동일하게 override(낙관적/동기화된 정확한 카운트) 우선, 없으면 likes_count.
+  const sorted = useMemo(() => {
+    if (sortBy === "latest") return filtered;
+    if (sortBy === "popular") {
+      return [...filtered].sort((a, b) => (b.views_count ?? 0) - (a.views_count ?? 0));
+    }
+    const likeCount = (a: Article) => likesOverrides.get(a.id) ?? a.likes_count ?? 0;
+    return [...filtered].sort((a, b) => likeCount(b) - likeCount(a));
+  }, [filtered, sortBy, likesOverrides]);
 
   return (
     <div className="min-h-dvh text-zinc-900 dark:text-zinc-100">
@@ -183,6 +206,38 @@ export function HomeClient({ articles, usingMock }: Props) {
           </div>
         )}
 
+        {filtered.length > 0 && (
+          <div className="mb-5 flex items-center justify-between gap-3">
+            <p className="text-sm font-bold text-zinc-500 dark:text-zinc-400">{filtered.length}개</p>
+            <div
+              role="tablist"
+              aria-label="정렬 기준"
+              className="inline-flex shrink-0 select-none items-center rounded-full border-2 border-zinc-900/10 bg-white/70 p-0.5 text-sm font-bold dark:border-white/15 dark:bg-white/5"
+            >
+              {SORT_OPTIONS.map((opt) => {
+                const active = sortBy === opt.key;
+                return (
+                  <button
+                    key={opt.key}
+                    type="button"
+                    role="tab"
+                    aria-selected={active}
+                    onClick={() => setSortBy(opt.key)}
+                    className={
+                      "cursor-pointer rounded-full px-3.5 py-1.5 transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-violet-500 active:scale-[0.97] " +
+                      (active
+                        ? "bg-violet-600 text-white shadow-[0_4px_12px_-4px_rgba(124,58,237,0.5)]"
+                        : "text-zinc-600 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-100")
+                    }
+                  >
+                    {opt.label}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        )}
+
         {filtered.length === 0 ? (
           <div className="flex flex-col items-center justify-center gap-2 rounded-3xl border-2 border-dashed border-zinc-900/15 bg-white/50 py-16 text-center dark:border-white/15 dark:bg-white/5">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="h-8 w-8 text-zinc-400">
@@ -194,7 +249,7 @@ export function HomeClient({ articles, usingMock }: Props) {
           </div>
         ) : (
           <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
-            {filtered.map((article) => (
+            {sorted.map((article) => (
               <ArticleCard
                 key={article.id}
                 article={article}
