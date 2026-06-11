@@ -1,6 +1,6 @@
 "use client";
 
-import { useDeferredValue, useEffect, useMemo, useState, useSyncExternalStore } from "react";
+import { useDeferredValue, useEffect, useMemo, useState } from "react";
 
 import { ArticleCard } from "@/components/ArticleCard";
 import { CategoryFilter } from "@/components/CategoryFilter";
@@ -32,14 +32,6 @@ const SORT_OPTIONS: { key: SortKey; label: string }[] = [
   { key: "likes", label: "좋아요순" },
 ];
 
-// 클라이언트 마운트 시각을 한 번만 읽어 고정(키워드 레일의 오늘/금주 윈도우 기준).
-// useSyncExternalStore 로 서버=0, 클라=실제 시각을 주어 하이드레이션 불일치를 피한다.
-// getClientNow 는 첫 호출 값을 캐시해 스냅샷을 안정화(미캐시 시 무한 렌더).
-const emptySubscribe = () => () => {};
-let clientNow = 0;
-const getClientNow = () => (clientNow ||= Date.now());
-const getServerNow = () => 0;
-
 export function HomeClient({ articles, usingMock }: Props) {
   const [category, setCategory] = useState<CategoryId>("all");
   // 모바일에서 카테고리 탭(9개)이 3~4줄로 펼쳐져 sticky 헤더가 화면을 덮는 걸 막기 위한 접기/펼치기.
@@ -49,10 +41,6 @@ export function HomeClient({ articles, usingMock }: Props) {
   const [sortBy, setSortBy] = useState<SortKey>("latest");
   const [query, setQuery] = useState("");
   const deferredQuery = useDeferredValue(query);
-
-  // 키워드 레일 시간대(오늘/금주) 집계용 now. SSR=0, 클라 마운트 후 실제 시각으로 전환.
-  // 0 동안은 시간대 탭만 비고, 기본 '화제' 탭은 시간 비의존이라 깜빡임 없이 채워진다.
-  const now = useSyncExternalStore(emptySubscribe, getClientNow, getServerNow);
 
   const activeCategoryLabel = CATEGORIES.find((c) => c.id === category)?.label ?? "전체";
 
@@ -220,10 +208,9 @@ export function HomeClient({ articles, usingMock }: Props) {
       </header>
 
       <main className="mx-auto max-w-6xl px-4 py-6">
-        {/* ── 트렌딩 키워드 레일 (오늘/금주/화제) — 칩 클릭 시 해당 키워드로 검색 ── */}
+        {/* ── 오늘의 키워드 (가져온 카드 제목 빈도순 상위 5) — 칩 클릭 시 검색 ── */}
         <KeywordRail
           articles={articles}
-          now={now}
           onPick={(q) => {
             setCategory("all");
             setShowBookmarksOnly(false);

@@ -81,11 +81,3 @@ export function topKeywords(
     .slice(0, limit)
     .map(({ label, q, count }) => ({ label, q, count }));
 }
-
-/** published_at 기준 [now-windowMs, now] 안에 든 기사만. now=0(마운트 전)이면 빈 배열. */
-export function withinMs(articles: Article[], windowMs: number, now: number): Article[] {
-  return articles.filter((a) => {
-    const age = now - new Date(a.published_at).getTime();
-    return age >= 0 && age <= windowMs;
-  });
-}
