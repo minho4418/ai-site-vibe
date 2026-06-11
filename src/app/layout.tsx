@@ -39,7 +39,6 @@ export const metadata: Metadata = {
     "AI 뉴스",
     "인공지능 뉴스",
     "AI 큐레이션",
-    "개발자 뉴스",
     "AI 코딩 도구",
     "LLM",
     "생성형 AI",
@@ -51,7 +50,7 @@ export const metadata: Metadata = {
   // 홈의 정식 주소를 명시 → 중복 URL(쿼리·트래킹 파라미터) 색인 방지.
   alternates: { canonical: "/" },
   openGraph: {
-    title: "Knewit - 개발자를 위한 AI 뉴스 큐레이션",
+    title: "Knewit - AI 뉴스 큐레이션",
     description: SITE_DESCRIPTION,
     url: SITE_URL,
     siteName: "Knewit",
@@ -60,8 +59,8 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "Knewit - 개발자를 위한 AI 뉴스 큐레이션",
-    description: "개발자를 위한 AI 뉴스 큐레이션. 매일 오전 8시 자동 업데이트.",
+    title: "Knewit - AI 뉴스 큐레이션",
+    description: "AI 뉴스 큐레이션. 매일 오전 8시 자동 업데이트.",
   },
   // 검색엔진에 색인·미리보기 정책 명시(기본 허용 + 최대 미리보기).
   robots: {

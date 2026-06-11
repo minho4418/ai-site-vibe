@@ -6,4 +6,4 @@ export const SITE_URL =
 export const SITE_NAME = "Knewit";
 
 export const SITE_DESCRIPTION =
-  "AI·개발툴·실무·창업·공모전까지, 개발자에게 유용한 AI 소식을 매일 오전 8시에 자동 큐레이션합니다. AI 코딩 도구 랭킹도 함께.";
+  "AI·개발툴·실무·창업·공모전까지, 유용한 AI 소식을 매일 오전 8시에 자동 큐레이션합니다. AI 코딩 도구 랭킹도 함께.";
