@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useDeferredValue, useEffect, useMemo, useState } from "react";
 
 import { ArticleCard } from "@/components/ArticleCard";
@@ -160,6 +161,16 @@ export function HomeClient({ articles, usingMock }: Props) {
           </button>
           <div className="flex items-center gap-2">
             <SearchInput value={query} onChange={setQuery} />
+            <Link
+              href="/ranking"
+              aria-label="AI 코딩 툴 랭킹"
+              className="inline-flex h-9 shrink-0 select-none items-center gap-1.5 whitespace-nowrap rounded-full border-2 border-zinc-900/10 bg-white/70 px-3 text-sm font-bold text-zinc-700 transition-colors hover:bg-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-violet-500 active:scale-[0.97] dark:border-white/15 dark:bg-white/5 dark:text-zinc-300 dark:hover:bg-white/10"
+            >
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4">
+                <path d="M8 21h8M12 17v4M7 4h10v4a5 5 0 0 1-10 0zM5 7H3a2 2 0 0 0 0 4h2M19 7h2a2 2 0 0 1 0 4h-2" />
+              </svg>
+              <span className="hidden sm:inline">랭킹</span>
+            </Link>
             <button
               type="button"
               onClick={() => setShowBookmarksOnly((v) => !v)}
