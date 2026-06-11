@@ -8,7 +8,7 @@ import { getRanking } from "@/lib/github";
 export const revalidate = 3600;
 
 export const metadata: Metadata = {
-  title: "AI 코딩 툴 랭킹 — Knewit",
+  title: "AI 랭킹 — Knewit",
   description: "Cline·Cursor·Aider·OpenHands 등 AI 코딩·에이전트 도구를 GitHub ⭐ 기준으로 랭킹.",
 };
 
@@ -30,14 +30,14 @@ export default async function RankingPage() {
             </div>
             <span className="font-display text-xl tracking-tight">Knewit</span>
           </Link>
-          <span className="text-sm font-bold text-zinc-500 dark:text-zinc-400">🏆 AI 코딩 툴 랭킹</span>
+          <span className="text-sm font-bold text-zinc-500 dark:text-zinc-400">🏆 AI 랭킹</span>
         </div>
       </header>
 
       <main className="mx-auto max-w-4xl px-4 py-6">
-        <h1 className="mb-1 font-display text-3xl tracking-tight">AI 코딩 툴 랭킹</h1>
+        <h1 className="mb-1 font-display text-3xl tracking-tight">AI 랭킹</h1>
         <p className="mb-5 text-sm text-zinc-500 dark:text-zinc-400">
-          스킬·프레임워크, 코딩·에이전트, MCP 서버를 GitHub ⭐ 기준으로 줄세웠어요. 🔥 주간 상승 탭은 전체에서 최근 7일 ⭐ 증가순.
+          코딩·에이전트, 스킬·프레임워크, MCP 서버를 GitHub ⭐ 기준으로 줄세웠어요. 🔥 주간 상승 탭은 전체에서 최근 7일 ⭐ 증가순.
         </p>
         <RankingClient ranking={ranking} />
       </main>

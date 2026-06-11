@@ -8,8 +8,8 @@ import type { Ranking, RankedRepo } from "@/lib/github";
 type TabKey = CategoryKey | "weekly";
 
 const TABS: { key: TabKey; label: string }[] = [
-  { key: "skills", label: "스킬·프레임워크" },
   { key: "agents", label: "코딩·에이전트" },
+  { key: "skills", label: "스킬·프레임워크" },
   { key: "mcp", label: "MCP 서버" },
   { key: "weekly", label: "🔥 주간 상승" },
 ];
