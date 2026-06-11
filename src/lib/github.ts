@@ -1,14 +1,16 @@
-import { CATEGORIES, type CategoryKey } from "./ai-tools";
+import { BLOCKLIST, CATEGORIES, type CategoryKey } from "./ai-tools";
 
-// 큐레이션 repo 들의 GitHub 지표를 모아 랭킹 데이터를 만든다.
-// - 카테고리별: 누적 star 순. repo 당 1회 호출이라 토큰 없이도 동작.
-// - 주간 상승: 세 카테고리 전체(union)에서 최근 7일 star 증가순. stargazers 페이지네이션이
-//   무거워 GITHUB_TOKEN 이 있을 때만 집계한다. 모든 호출 1시간 캐시(ISR).
+// 하이브리드 랭킹 데이터:
+//  - 카테고리별: 시드(보장) + 이름/설명 검색(자동 발굴, queries 있을 때) → 블록리스트·최소별 필터 → 별순.
+//  - 주간 상승: 세 카테고리 전체(union)에서 최근 7일 star 증가순.
+//  누적 별은 토큰 없이도 동작. 주간 상승은 stargazers 페이지네이션이 무거워 GITHUB_TOKEN 이 있을 때만.
+//  모든 호출 1시간 캐시(ISR).
 
 const GH = "https://api.github.com";
 const WEEK_MS = 7 * 24 * 60 * 60 * 1000;
 const PER_PAGE = 100;
-const MAX_WEEKLY_PAGES = 20; // 안전 상한(≈2,000/주 초과는 "+"로 표기)
+const MAX_WEEKLY_PAGES = 20; // ≈2,000/주 초과는 "+"로 표기
+const PER_CATEGORY = 20;
 const WEEKLY_TOP = 20;
 
 export type RankedRepo = {
@@ -51,26 +53,42 @@ function ghHeaders(starMedia = false): HeadersInit {
   return h;
 }
 
-async function fetchRepo(repo: string, category: CategoryKey): Promise<RankedRepo | null> {
+const lc = (s: string) => s.toLowerCase();
+
+async function fetchRepo(repo: string): Promise<GhRepo | null> {
   try {
     const res = await fetch(`${GH}/repos/${repo}`, { headers: ghHeaders(), next: { revalidate: 3600 } });
     if (!res.ok) return null;
-    const d = (await res.json()) as GhRepo;
-    return {
-      repo: d.full_name,
-      label: d.full_name.split("/")[1] ?? d.full_name,
-      url: d.html_url,
-      description: d.description ?? "",
-      stars: d.stargazers_count,
-      forks: d.forks_count,
-      language: d.language,
-      category,
-      weeklyStars: null,
-      weeklyCapped: false,
-    };
+    return (await res.json()) as GhRepo;
   } catch {
     return null;
   }
+}
+
+async function searchRepos(query: string): Promise<GhRepo[]> {
+  try {
+    const url = `${GH}/search/repositories?sort=stars&order=desc&per_page=20&q=${encodeURIComponent(query)}`;
+    const res = await fetch(url, { headers: ghHeaders(), next: { revalidate: 3600 } });
+    if (!res.ok) return [];
+    return ((await res.json()) as { items?: GhRepo[] }).items ?? [];
+  } catch {
+    return [];
+  }
+}
+
+function toRanked(r: GhRepo, category: CategoryKey): RankedRepo {
+  return {
+    repo: r.full_name,
+    label: r.full_name.split("/")[1] ?? r.full_name,
+    url: r.html_url,
+    description: r.description ?? "",
+    stars: r.stargazers_count,
+    forks: r.forks_count,
+    language: r.language,
+    category,
+    weeklyStars: null,
+    weeklyCapped: false,
+  };
 }
 
 async function fetchWeeklyStars(
@@ -106,23 +124,34 @@ async function fetchWeeklyStars(
 }
 
 export async function getRanking(): Promise<Ranking> {
-  const seen = new Set<string>();
+  const blocked = new Set(BLOCKLIST.map(lc));
+  const claimed = new Set<string>(); // 여러 카테고리 중복 노출 방지
   const byCategory = { skills: [], agents: [], mcp: [] } as Record<CategoryKey, RankedRepo[]>;
 
   for (const cat of CATEGORIES) {
-    const rows = await Promise.all(cat.repos.map((r) => fetchRepo(r, cat.key)));
-    byCategory[cat.key] = rows
-      .filter((r): r is RankedRepo => r !== null)
-      .filter((r) => {
-        const key = r.repo.toLowerCase();
-        if (seen.has(key)) return false; // 중복(여러 카테고리) 방지
-        seen.add(key);
-        return true;
+    const found = new Map<string, GhRepo>();
+
+    // 시드(보장)
+    const seedRows = await Promise.all(cat.seeds.map(fetchRepo));
+    for (const r of seedRows) if (r) found.set(lc(r.full_name), r);
+
+    // 자동 발굴(이름/설명 검색) — minStars 이상, fork 제외
+    for (const q of cat.queries) {
+      const items = await searchRepos(`${q} stars:>=${cat.minStars} fork:false`);
+      for (const r of items) if (!found.has(lc(r.full_name))) found.set(lc(r.full_name), r);
+    }
+
+    byCategory[cat.key] = [...found.values()]
+      .filter((r) => !blocked.has(lc(r.full_name)) && !claimed.has(lc(r.full_name)))
+      .map((r) => {
+        claimed.add(lc(r.full_name));
+        return toRanked(r, cat.key);
       })
-      .sort((a, b) => b.stars - a.stars);
+      .sort((a, b) => b.stars - a.stars)
+      .slice(0, PER_CATEGORY);
   }
 
-  // 주간 상승: 전체 union 에 대해 최근 7일 star 증가(토큰 있을 때만).
+  // 주간 상승: 전체 union 에서 최근 7일 star 증가(토큰 있을 때만).
   const union = [...byCategory.skills, ...byCategory.agents, ...byCategory.mcp];
   let weeklyAvailable = false;
   if (process.env.GITHUB_TOKEN) {

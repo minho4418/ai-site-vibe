@@ -1,16 +1,24 @@
-// 랭킹 카테고리 + 큐레이션 repo 목록.
-// ※ GitHub 토픽 자동 검색(하이브리드)을 시도했으나, topic:mcp 에 n8n·dify·JavaGuide 등
-//    무관 repo 가, agents/skills 에도 가짜별 repo 가 대거 섞여 품질이 안 나왔다.
-//    → 신뢰할 수 있는 큐레이션 목록으로 운영한다. 새 repo 는 해당 카테고리에 "owner/name" 한 줄 추가.
-//    (사라지거나 slug 가 틀린 repo 는 수집 시 자동으로 건너뜀)
+// 랭킹 소스 = 하이브리드(카테고리별 전략).
+//  - seeds: 항상 포함을 보장하는 큐레이션 repo
+//  - queries: GitHub 이름/설명 검색으로 자동 발굴할 쿼리(목록 밖 새 repo도 잡힘). 빈 배열이면 자동 OFF.
+//  - minStars: 검색 결과 최소 별(소형 정크 컷)
+//  실측 결과: MCP 는 "mcp in:name" 검색이 깨끗(playwright-mcp 등)해서 자동 ON.
+//            스킬은 자동+블록리스트로 운영. 에이전트는 깨끗한 자동 신호가 없어(ansible 등 오검출) 큐레이션만.
+//  BLOCKLIST: 가짜별(star-farming)·오태깅으로 상위를 더럽히는 repo 차단.
 export type CategoryKey = "skills" | "agents" | "mcp";
-export type Category = { key: CategoryKey; label: string; repos: string[] };
+export type Category = {
+  key: CategoryKey;
+  label: string;
+  seeds: string[];
+  queries: string[];
+  minStars: number;
+};
 
 export const CATEGORIES: Category[] = [
   {
     key: "skills",
     label: "스킬·프레임워크",
-    repos: [
+    seeds: [
       "obra/superpowers",
       "anthropics/skills",
       "ComposioHQ/awesome-claude-skills",
@@ -19,11 +27,13 @@ export const CATEGORIES: Category[] = [
       "anthropics/claude-cookbooks",
       "getAsterisk/claudia",
     ],
+    queries: ["claude skill in:name,description", "agent skills in:name,description"],
+    minStars: 5000,
   },
   {
     key: "agents",
     label: "코딩·에이전트 도구",
-    repos: [
+    seeds: [
       "cline/cline",
       "RooCodeInc/Roo-Code",
       "Aider-AI/aider",
@@ -44,17 +54,38 @@ export const CATEGORIES: Category[] = [
       "plandex-ai/plandex",
       "kilo-org/kilocode",
     ],
+    queries: [], // 자동 검색은 ansible 등 오검출이 심해 끔 — 큐레이션만.
+    minStars: 0,
   },
   {
     key: "mcp",
     label: "MCP 서버",
-    repos: [
+    seeds: [
       "modelcontextprotocol/servers",
-      "punkpeye/awesome-mcp-servers",
       "github/github-mcp-server",
-      "modelcontextprotocol/python-sdk",
-      "modelcontextprotocol/typescript-sdk",
-      "wong2/awesome-mcp-servers",
+      "punkpeye/awesome-mcp-servers",
     ],
+    queries: ["mcp in:name", "mcp server in:name,description"],
+    minStars: 800,
   },
+];
+
+// 가짜별·오태깅 repo 차단(소문자 "owner/name").
+export const BLOCKLIST: string[] = [
+  "affaan-m/ecc",
+  "ultraworkers/claw-code",
+  "multica-ai/andrej-karpathy-skills",
+  "juliusbrussee/caveman",
+  "nexu-io/open-design",
+  "farion1231/cc-switch",
+  "nousresearch/hermes-agent",
+  "egonex-ai/understand-anything",
+  "nextlevelbuilder/ui-ux-pro-max-skill",
+  "code-yeongyu/oh-my-openagent",
+  "x1xhlol/system-prompts-and-models-of-ai-tools",
+  "voltagent/awesome-design-md",
+  "voltagent/awesome-openclaw-skills",
+  "shareai-lab/learn-claude-code",
+  "ansible/ansible",
+  "thedotmack/claude-mem",
 ];
