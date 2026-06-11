@@ -35,10 +35,7 @@ export default async function RankingPage() {
       </header>
 
       <main className="mx-auto max-w-4xl px-4 py-6">
-        <h1 className="mb-1 font-display text-3xl tracking-tight">AI 랭킹</h1>
-        <p className="mb-5 text-sm text-zinc-500 dark:text-zinc-400">
-          코딩·에이전트, 스킬·프레임워크, MCP 서버를 GitHub ⭐ 기준으로 줄세웠어요. 🔥 주간 상승 탭은 전체에서 최근 7일 ⭐ 증가순.
-        </p>
+        <h1 className="mb-5 font-display text-3xl tracking-tight">AI 랭킹</h1>
         <RankingClient ranking={ranking} />
       </main>
     </div>
