@@ -28,10 +28,10 @@ const blackHanSans = Black_Han_Sans({
 export const metadata: Metadata = {
   // og:image 등 상대 URL 을 절대 URL 로 바꾸는 기준(카톡·트위터는 절대 URL 필요).
   metadataBase: new URL(SITE_URL),
-  // 하위 페이지는 "%s — Knewit" 로 자동 조합, 홈은 default 사용.
+  // 하위 페이지는 "%s - Knewit" 로 자동 조합, 홈은 default 사용.
   title: {
-    default: "Knewit - 개발자를 위한 AI 뉴스 큐레이션",
-    template: "%s — Knewit",
+    default: "Knewit - AI 뉴스 큐레이션",
+    template: "%s - Knewit",
   },
   description: SITE_DESCRIPTION,
   applicationName: "Knewit",
