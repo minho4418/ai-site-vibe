@@ -151,8 +151,9 @@ export function HomeClient({ articles, usingMock }: Props) {
             className="flex w-fit cursor-pointer items-center gap-2.5 rounded-xl transition-opacity hover:opacity-80 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-violet-500 active:scale-[0.98]"
           >
             <div className="grain relative flex h-9 w-9 items-center justify-center overflow-hidden rounded-xl bg-gradient-to-br from-fuchsia-500 via-purple-500 to-orange-400 text-white shadow-[0_4px_14px_-4px_rgba(168,85,247,0.6)]">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="relative h-4 w-4">
-                <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83" />
+              {/* Knewit 'K' 모노그램 (파비콘 src/app/icon.svg 와 동일 형태) */}
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round" className="relative h-4 w-4">
+                <path d="M8 5v14M8 12l8-7M8 12l8 7" />
               </svg>
             </div>
             <span className="font-display text-xl tracking-tight">Knewit</span>
