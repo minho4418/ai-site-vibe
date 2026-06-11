@@ -32,12 +32,13 @@ export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
   // 하위 페이지는 "%s - Knewit" 로 자동 조합, 홈은 default 사용.
   title: {
-    default: "Knewit - AI 뉴스 큐레이션",
+    default: "Knewit - 오늘의 AI 뉴스",
     template: "%s - Knewit",
   },
   description: SITE_DESCRIPTION,
   applicationName: "Knewit",
   keywords: [
+    "오늘의 AI 뉴스",
     "AI 뉴스",
     "인공지능 뉴스",
     "AI 큐레이션",
@@ -52,7 +53,7 @@ export const metadata: Metadata = {
   // 홈의 정식 주소를 명시 → 중복 URL(쿼리·트래킹 파라미터) 색인 방지.
   alternates: { canonical: "/" },
   openGraph: {
-    title: "Knewit - AI 뉴스 큐레이션",
+    title: "Knewit - 오늘의 AI 뉴스",
     description: SITE_DESCRIPTION,
     url: SITE_URL,
     siteName: "Knewit",
@@ -61,8 +62,8 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "Knewit - AI 뉴스 큐레이션",
-    description: "AI 뉴스 큐레이션. 매일 오전 8시 자동 업데이트.",
+    title: "Knewit - 오늘의 AI 뉴스",
+    description: "오늘의 AI 뉴스. 매일 오전 8시 자동 업데이트.",
   },
   // 검색엔진에 색인·미리보기 정책 명시(기본 허용 + 최대 미리보기).
   robots: {

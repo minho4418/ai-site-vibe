@@ -309,7 +309,7 @@ export function HomeClient({ articles, usingMock }: Props) {
       </main>
 
       <footer className="mx-auto max-w-6xl px-4 pb-10 pt-6 text-center text-xs font-medium text-zinc-500 dark:text-zinc-500">
-        AI 큐레이션 · 매일 오전 8시 업데이트
+        오늘의 AI 뉴스 · 매일 오전 8시 업데이트
       </footer>
     </div>
   );
