@@ -1,9 +1,10 @@
 "use client";
 
-import { useDeferredValue, useEffect, useMemo, useState } from "react";
+import { useDeferredValue, useEffect, useMemo, useState, useSyncExternalStore } from "react";
 
 import { ArticleCard } from "@/components/ArticleCard";
 import { CategoryFilter } from "@/components/CategoryFilter";
+import { KeywordRail } from "@/components/KeywordRail";
 import { SearchInput } from "@/components/SearchInput";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { fetchArticlesByIds } from "@/lib/articles-client";
@@ -31,6 +32,14 @@ const SORT_OPTIONS: { key: SortKey; label: string }[] = [
   { key: "likes", label: "좋아요순" },
 ];
 
+// 클라이언트 마운트 시각을 한 번만 읽어 고정(키워드 레일의 오늘/금주 윈도우 기준).
+// useSyncExternalStore 로 서버=0, 클라=실제 시각을 주어 하이드레이션 불일치를 피한다.
+// getClientNow 는 첫 호출 값을 캐시해 스냅샷을 안정화(미캐시 시 무한 렌더).
+const emptySubscribe = () => () => {};
+let clientNow = 0;
+const getClientNow = () => (clientNow ||= Date.now());
+const getServerNow = () => 0;
+
 export function HomeClient({ articles, usingMock }: Props) {
   const [category, setCategory] = useState<CategoryId>("all");
   // 모바일에서 카테고리 탭(9개)이 3~4줄로 펼쳐져 sticky 헤더가 화면을 덮는 걸 막기 위한 접기/펼치기.
@@ -40,6 +49,10 @@ export function HomeClient({ articles, usingMock }: Props) {
   const [sortBy, setSortBy] = useState<SortKey>("latest");
   const [query, setQuery] = useState("");
   const deferredQuery = useDeferredValue(query);
+
+  // 키워드 레일 시간대(오늘/금주) 집계용 now. SSR=0, 클라 마운트 후 실제 시각으로 전환.
+  // 0 동안은 시간대 탭만 비고, 기본 '화제' 탭은 시간 비의존이라 깜빡임 없이 채워진다.
+  const now = useSyncExternalStore(emptySubscribe, getClientNow, getServerNow);
 
   const activeCategoryLabel = CATEGORIES.find((c) => c.id === category)?.label ?? "전체";
 
@@ -148,7 +161,7 @@ export function HomeClient({ articles, usingMock }: Props) {
                 <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83" />
               </svg>
             </div>
-            <span className="font-display text-xl tracking-tight">AI 뉴스</span>
+            <span className="font-display text-xl tracking-tight">Knewit</span>
           </button>
           <div className="flex items-center gap-2">
             <SearchInput value={query} onChange={setQuery} />
@@ -207,30 +220,16 @@ export function HomeClient({ articles, usingMock }: Props) {
       </header>
 
       <main className="mx-auto max-w-6xl px-4 py-6">
-        {/* ── Config 무드 히어로 ───────────────────────────────── */}
-        <section className="grain relative mb-8 cursor-default select-none overflow-hidden rounded-3xl bg-gradient-to-br from-fuchsia-600 via-purple-600 to-indigo-600 px-6 py-12 shadow-[0_24px_60px_-24px_rgba(124,58,237,0.6)] sm:px-10 sm:py-16">
-          <span aria-hidden="true" className="pointer-events-none absolute -left-16 -top-20 h-64 w-64 rounded-full bg-orange-400/60 blur-3xl" />
-          <span aria-hidden="true" className="pointer-events-none absolute -right-12 bottom-[-3rem] h-72 w-72 rounded-full bg-pink-400/50 blur-3xl" />
-          <span aria-hidden="true" className="pointer-events-none absolute right-1/3 top-0 h-44 w-44 rounded-full bg-cyan-300/40 blur-3xl" />
-          <div className="relative">
-            <span className="mb-5 inline-flex items-center gap-2 rounded-full bg-white/15 px-3 py-1 text-xs font-bold text-white ring-1 ring-inset ring-white/25 backdrop-blur">
-              <span className="relative flex h-2 w-2">
-                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-white/80" />
-                <span className="relative inline-flex h-2 w-2 rounded-full bg-white" />
-              </span>
-              매일 오전 8시 자동 업데이트
-            </span>
-            <h1 className="font-display text-5xl leading-[0.95] tracking-tight text-white sm:text-7xl">
-              AI 뉴스
-            </h1>
-            <p className="mt-4 max-w-xl text-base font-medium text-white/85 sm:text-lg">
-              한국 개발자를 위한 AI·개발툴·실무·창업·공모전 소식을 한 곳에서.
-            </p>
-            <p className="mt-3 text-sm font-bold uppercase tracking-wider text-white/70">
-              {articles.length}개 큐레이션 · RSS 기반
-            </p>
-          </div>
-        </section>
+        {/* ── 트렌딩 키워드 레일 (오늘/금주/화제) — 칩 클릭 시 해당 키워드로 검색 ── */}
+        <KeywordRail
+          articles={articles}
+          now={now}
+          onPick={(q) => {
+            setCategory("all");
+            setShowBookmarksOnly(false);
+            setQuery(q);
+          }}
+        />
 
         {usingMock && (
           <div className="mb-6 flex flex-col gap-1 rounded-2xl border-2 border-amber-300/60 bg-amber-50 px-4 py-3 text-sm text-amber-900 dark:border-amber-500/30 dark:bg-amber-500/10 dark:text-amber-200">
