@@ -169,7 +169,7 @@ export function HomeClient({ articles, usingMock }: Props) {
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4">
                 <path d="M8 21h8M12 17v4M7 4h10v4a5 5 0 0 1-10 0zM5 7H3a2 2 0 0 0 0 4h2M19 7h2a2 2 0 0 1 0 4h-2" />
               </svg>
-              <span className="hidden sm:inline">랭킹</span>
+              <span className="hidden sm:inline">AI 툴 랭킹</span>
             </Link>
             <button
               type="button"
