@@ -74,6 +74,11 @@ export const metadata: Metadata = {
       "max-video-preview": -1,
     },
   },
+  // Google Search Console 소유권 확인용(URL 접두어 속성, HTML 태그 방식).
+  // <meta name="google-site-verification" content="..."> 로 출력됨.
+  verification: {
+    google: "NyYjfivTVST7uKsFOCxeJf2XkzMfTDU4RLB17ujuRno",
+  },
 };
 
 // 검색엔진용 구조화 데이터(JSON-LD). 사이트 정체성·운영주체를 기계가 읽을 수 있게.
