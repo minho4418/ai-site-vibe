@@ -8,7 +8,7 @@ import { getRanking } from "@/lib/github";
 export const revalidate = 3600;
 
 export const metadata: Metadata = {
-  title: "AI 랭킹 — Knewit",
+  title: "AI 랭킹 - Knewit",
   description: "Cline·Cursor·Aider·OpenHands 등 AI 코딩·에이전트 도구를 GitHub ⭐ 기준으로 랭킹.",
 };
 
