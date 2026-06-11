@@ -3,7 +3,7 @@ import { ImageResponse } from "next/og";
 // 카톡·트위터·슬랙 등에서 링크 공유 시 뜨는 미리보기 카드(og:image).
 // Satori 기본 폰트는 한글 글리프가 없어 깨지므로, 카드 텍스트는 로마자만 사용한다.
 // (한글 문구가 필요하면 fonts 옵션으로 woff/otf 를 로드해야 함)
-export const alt = "Knewit — AI 뉴스 큐레이션";
+export const alt = "Knewit - AI 뉴스 큐레이션";
 export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
 
