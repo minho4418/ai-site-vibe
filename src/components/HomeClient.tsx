@@ -217,6 +217,7 @@ export function HomeClient({ articles, usingMock }: Props) {
               active={category}
               onChange={(next) => {
                 setCategory(next);
+                setKeyword(null); // 키워드 ↔ 카테고리는 배타적: 카테고리 누르면 오늘의 키워드 해제
                 setCatOpen(false); // 모바일: 선택하면 자동으로 접어 헤더를 다시 슬림하게
               }}
               counts={counts}
