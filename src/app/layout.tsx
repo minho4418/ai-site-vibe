@@ -31,11 +31,11 @@ export const metadata: Metadata = {
   ),
   title: "Knewit — AI 뉴스 큐레이션",
   description:
-    "AI·개발툴·실무·창업·공모전까지, 한국 개발자에게 유용한 AI 소식을 매일 오전 8시에 자동 큐레이션합니다.",
+    "AI·개발툴·실무·창업·공모전까지, 개발자에게 유용한 AI 소식을 매일 오전 8시에 자동 큐레이션합니다.",
   openGraph: {
     title: "Knewit — AI 뉴스 큐레이션",
     description:
-      "AI·개발툴·실무·창업·공모전까지, 한국 개발자에게 유용한 AI 소식을 매일 오전 8시에 자동 큐레이션합니다.",
+      "AI·개발툴·실무·창업·공모전까지, 개발자에게 유용한 AI 소식을 매일 오전 8시에 자동 큐레이션합니다.",
     siteName: "Knewit",
     locale: "ko_KR",
     type: "website",
@@ -43,7 +43,7 @@ export const metadata: Metadata = {
   twitter: {
     card: "summary_large_image",
     title: "Knewit — AI 뉴스 큐레이션",
-    description: "한국 개발자를 위한 AI 뉴스 큐레이션. 매일 오전 8시 자동 업데이트.",
+    description: "개발자를 위한 AI 뉴스 큐레이션. 매일 오전 8시 자동 업데이트.",
   },
 };
 
