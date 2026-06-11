@@ -8,10 +8,27 @@ import { CATEGORY_COLORS, CATEGORY_LABELS } from "@/lib/categories";
 import { isFresh, timeAgo } from "@/lib/time";
 import type { Article } from "@/lib/types";
 
-// Google News 리다이렉트 URL 은 본문을 못 가져온다(상세 요약 불가) → 그런 기사엔 상세 버튼을 숨긴다.
+// 서버에서 본문을 못 가져오는 도메인 → 상세 요약 불가라 상세 버튼을 숨긴다.
+// (2026-06 직접 점검: 봇 차단 403/429 또는 JS 렌더라 서버 fetch 로 본문이 안 잡힘)
+// - news.google.com : 리다이렉트 스텁이라 본문 없음
+// - openai.com      : Cloudflare JS 챌린지 → 403(브라우저 UA 로도 차단)
+// - venturebeat.com : 봇 차단 → 429
+// - medium.com      : 봇 차단 → 403 (당근 기술블로그가 medium.com/daangn)
+// - d2.naver.com    : SPA(JS 렌더) → HTML 에 본문 없음
+// - tech.kakao.com  : SPA(JS 렌더) → HTML 에 본문 없음
+const BODY_BLOCKED_HOSTS = new Set([
+  "news.google.com",
+  "openai.com",
+  "venturebeat.com",
+  "medium.com",
+  "d2.naver.com",
+  "tech.kakao.com",
+]);
+
 function canFetchBody(pageUrl: string): boolean {
   try {
-    return new URL(pageUrl).hostname !== "news.google.com";
+    const host = new URL(pageUrl).hostname.replace(/^www\./, "");
+    return !BODY_BLOCKED_HOSTS.has(host);
   } catch {
     return false;
   }
