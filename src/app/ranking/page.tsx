@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 
 import { RankingClient } from "@/components/RankingClient";
-import { getToolRanking } from "@/lib/github";
+import { getRanking } from "@/lib/github";
 
 // GitHub 지표는 1시간마다 갱신(ISR).
 export const revalidate = 3600;
@@ -13,7 +13,7 @@ export const metadata: Metadata = {
 };
 
 export default async function RankingPage() {
-  const tools = await getToolRanking();
+  const ranking = await getRanking();
 
   return (
     <div className="min-h-dvh text-zinc-900 dark:text-zinc-100">
@@ -37,9 +37,9 @@ export default async function RankingPage() {
       <main className="mx-auto max-w-4xl px-4 py-6">
         <h1 className="mb-1 font-display text-3xl tracking-tight">AI 코딩 툴 랭킹</h1>
         <p className="mb-5 text-sm text-zinc-500 dark:text-zinc-400">
-          개발자들이 쓰는 AI 코딩·에이전트 도구를 GitHub ⭐ 기준으로 줄세웠어요.
+          스킬·프레임워크, 코딩·에이전트, MCP 서버를 GitHub ⭐ 기준으로 줄세웠어요. 🔥 주간 상승 탭은 전체에서 최근 7일 ⭐ 증가순.
         </p>
-        <RankingClient tools={tools} />
+        <RankingClient ranking={ranking} />
       </main>
     </div>
   );
