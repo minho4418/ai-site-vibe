@@ -164,7 +164,7 @@ export function HomeClient({ articles, usingMock }: Props) {
             <Link
               href="/ranking"
               aria-label="AI 랭킹"
-              className="inline-flex h-9 shrink-0 select-none items-center gap-1.5 whitespace-nowrap rounded-full border-2 border-transparent bg-gradient-to-br from-fuchsia-500 via-purple-500 to-orange-400 px-3 text-sm font-bold text-white shadow-[0_4px_14px_-4px_rgba(168,85,247,0.6)] transition-[transform,box-shadow] hover:-translate-y-0.5 hover:shadow-[0_8px_20px_-6px_rgba(168,85,247,0.75)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-violet-500 active:scale-[0.97]"
+              className="inline-flex h-9 shrink-0 select-none items-center gap-1.5 whitespace-nowrap rounded-full border-2 border-transparent bg-amber-500 px-3 text-sm font-bold text-white shadow-[0_4px_14px_-4px_rgba(245,158,11,0.55)] transition-[transform,background-color,box-shadow] hover:-translate-y-0.5 hover:bg-amber-600 hover:shadow-[0_8px_20px_-6px_rgba(245,158,11,0.7)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber-500 active:scale-[0.97]"
             >
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4">
                 <path d="M8 21h8M12 17v4M7 4h10v4a5 5 0 0 1-10 0zM5 7H3a2 2 0 0 0 0 4h2M19 7h2a2 2 0 0 1 0 4h-2" />
