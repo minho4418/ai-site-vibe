@@ -49,27 +49,27 @@ const KEYWORD_DEFS: KeywordDef[] = [
   { label: "보안", re: /보안|security|취약점|해킹|프롬프트\s?인젝션/i, q: "보안" },
 ];
 
-export type KeywordStat = { label: string; q: string; count: number };
+// re = 카운트에 쓴 바로 그 정규식. 칩 클릭 시 이 re 를 제목에 그대로 적용해야
+// "보이는 숫자 = 실제로 걸러지는 카드 수"가 정확히 일치한다.
+export type KeywordStat = { label: string; count: number; re: RegExp };
 
 /**
  * 기사 목록에서 키워드별 등장 빈도를 집계해 상위 limit 개를 반환.
- * weight 를 주면 점수는 가중 합(화제도 = 조회·좋아요 가중)으로 정렬하되,
- * 칩에 보여줄 count 는 항상 "해당 키워드가 등장한 기사 수"다.
+ * weight 를 주면 점수는 가중 합으로 정렬하되, count 는 항상 "제목에 등장한 기사 수"다.
  */
 export function topKeywords(
   articles: Article[],
   opts: { limit?: number; weight?: (a: Article) => number } = {},
 ): KeywordStat[] {
   const { limit = 12, weight } = opts;
-  const stat = new Map<string, { label: string; q: string; count: number; score: number }>();
+  const stat = new Map<string, { label: string; re: RegExp; count: number; score: number }>();
 
   for (const a of articles) {
     const text = a.title;
     const w = weight ? weight(a) : 1;
     for (const def of KEYWORD_DEFS) {
       if (!def.re.test(text)) continue;
-      const cur =
-        stat.get(def.label) ?? { label: def.label, q: def.q ?? def.label, count: 0, score: 0 };
+      const cur = stat.get(def.label) ?? { label: def.label, re: def.re, count: 0, score: 0 };
       cur.count += 1;
       cur.score += w;
       stat.set(def.label, cur);
@@ -79,5 +79,5 @@ export function topKeywords(
   return [...stat.values()]
     .sort((a, b) => b.score - a.score || b.count - a.count)
     .slice(0, limit)
-    .map(({ label, q, count }) => ({ label, q, count }));
+    .map(({ label, re, count }) => ({ label, re, count }));
 }

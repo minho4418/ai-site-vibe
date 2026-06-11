@@ -41,6 +41,9 @@ export function HomeClient({ articles, usingMock }: Props) {
   const [sortBy, setSortBy] = useState<SortKey>("latest");
   const [query, setQuery] = useState("");
   const deferredQuery = useDeferredValue(query);
+  // 오늘의 키워드 칩으로 거는 전용 필터. count 와 동일하게 '제목 정규식'으로만 걸러
+  // 칩에 보이는 숫자 = 실제 노출 카드 수가 일치하게 한다. (검색창 query 와는 별개)
+  const [keyword, setKeyword] = useState<{ label: string; re: RegExp } | null>(null);
 
   const activeCategoryLabel = CATEGORIES.find((c) => c.id === category)?.label ?? "전체";
 
@@ -101,6 +104,7 @@ export function HomeClient({ articles, usingMock }: Props) {
   const resetToInitial = () => {
     setCategory("all");
     setQuery("");
+    setKeyword(null);
     setShowBookmarksOnly(false);
     setSortBy("latest");
     if (typeof window !== "undefined") {
@@ -113,6 +117,8 @@ export function HomeClient({ articles, usingMock }: Props) {
     return source.filter((a) => {
       if (category !== "all" && a.category !== category) return false;
       if (showBookmarksOnly && !bookmarkedSet.has(a.id)) return false;
+      // 키워드 필터: count 와 동일한 제목 정규식. (칩 숫자 = 노출 카드 수 보장)
+      if (keyword && !keyword.re.test(a.title)) return false;
       if (!q) return true;
       return (
         a.title.toLowerCase().includes(q) ||
@@ -120,7 +126,7 @@ export function HomeClient({ articles, usingMock }: Props) {
         a.source.toLowerCase().includes(q)
       );
     });
-  }, [source, category, deferredQuery, showBookmarksOnly, bookmarkedSet]);
+  }, [source, category, deferredQuery, showBookmarksOnly, bookmarkedSet, keyword]);
 
   // 정렬: latest 는 서버 순서 유지(재정렬하면 cap 으로 분산시킨 게 가짜시간으로 다시 쏠림).
   // popular/likes 만 재정렬하며, 동점(대부분 0)은 Array.sort 안정성으로 latest(분산) 순서를 보존한다.
@@ -208,13 +214,16 @@ export function HomeClient({ articles, usingMock }: Props) {
       </header>
 
       <main className="mx-auto max-w-6xl px-4 py-6">
-        {/* ── 오늘의 키워드 (가져온 카드 제목 빈도순 상위 5) — 칩 클릭 시 검색 ── */}
+        {/* ── 오늘의 키워드 (가져온 카드 제목 빈도순 상위 5) — 칩 클릭 시 제목 필터 ── */}
         <KeywordRail
           articles={articles}
-          onPick={(q) => {
+          activeLabel={keyword?.label}
+          onPick={(k) => {
             setCategory("all");
             setShowBookmarksOnly(false);
-            setQuery(q);
+            setQuery("");
+            // 같은 칩 다시 누르면 해제(토글)
+            setKeyword((prev) => (prev?.label === k.label ? null : { label: k.label, re: k.re }));
           }}
         />
 
