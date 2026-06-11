@@ -111,14 +111,28 @@ export function ArticleCard({
         className="relative block aspect-[16/9] overflow-hidden bg-zinc-100 dark:bg-zinc-800"
       >
         {showImage ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img
-            src={article.thumbnail_url!}
-            alt=""
-            loading="lazy"
-            onError={() => setImgFailed(true)}
-            className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-[1.03]"
-          />
+          <>
+            {/* 블러 배경: 같은 썸네일을 cover+blur 로 깔아 16:9 박스를 메운다.
+                배너·로고처럼 비율이 안 맞는 이미지도 잘림 없이 자연스럽게 안착시킨다. */}
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src={article.thumbnail_url!}
+              alt=""
+              aria-hidden="true"
+              loading="lazy"
+              className="absolute inset-0 h-full w-full scale-110 object-cover blur-2xl"
+            />
+            <span aria-hidden="true" className="absolute inset-0 bg-white/30 dark:bg-black/40" />
+            {/* 전경: contain 으로 이미지 '전체'를 보여준다(블러 배경 위에 얹힘). */}
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src={article.thumbnail_url!}
+              alt=""
+              loading="lazy"
+              onError={() => setImgFailed(true)}
+              className="relative h-full w-full object-contain transition-transform duration-300 group-hover:scale-[1.03]"
+            />
+          </>
         ) : (
           // 썸네일이 없을 때: '가짜 사진'이 아니라 의도된 에디토리얼 커버.
           // 카테고리 라벨을 거대 워터마크로 깔고, 그레인 + 소스명을 얹어 잡지 섹션 표지처럼 보이게 한다.

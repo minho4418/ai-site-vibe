@@ -50,6 +50,12 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
       suppressHydrationWarning
       className={`${geistSans.variable} ${geistMono.variable} ${blackHanSans.variable} h-full antialiased`}
     >
+      {/* Pretendard (한국 웹 표준 폰트) — CDN. React 19 가 <head> 로 호이스팅한다.
+          변수 폰트 1파일이라 가볍다. 미로딩 구간은 --font-sans 의 Geist/시스템 폴백. */}
+      <link
+        rel="stylesheet"
+        href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable.min.css"
+      />
       <body className="min-h-full bg-[#FBF6EC] font-sans text-zinc-900 dark:bg-[#0d0b14] dark:text-zinc-100">
         <ThemeProvider>{children}</ThemeProvider>
       </body>

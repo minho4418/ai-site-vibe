@@ -3,8 +3,10 @@
 @custom-variant dark (&:where(.dark, .dark *));
 
 @theme inline {
-  --font-sans: var(--font-geist-sans);
+  /* 본문·UI 기본 폰트: Pretendard(한국 웹 표준, 뉴스·서비스에서 가장 대중적). Geist/시스템은 폴백. */
+  --font-sans: "Pretendard Variable", "Pretendard", var(--font-geist-sans), system-ui, -apple-system, sans-serif;
   --font-mono: var(--font-geist-mono);
+  /* 디스플레이(로고·커버 워터마크)는 브랜드 악센트로 Black Han Sans 유지. */
   --font-display: var(--font-black-han-sans);
 }
 
