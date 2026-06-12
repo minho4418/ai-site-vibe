@@ -77,10 +77,14 @@ export const metadata: Metadata = {
       "max-video-preview": -1,
     },
   },
-  // Google Search Console 소유권 확인용(URL 접두어 속성, HTML 태그 방식).
-  // <meta name="google-site-verification" content="..."> 로 출력됨.
+  // 검색엔진 소유권 확인용(HTML 태그 방식).
+  // google → <meta name="google-site-verification">, other → 임의 name 태그 출력.
   verification: {
     google: "NyYjfivTVST7uKsFOCxeJf2XkzMfTDU4RLB17ujuRno",
+    // 네이버 서치어드바이저 소유 확인 → <meta name="naver-site-verification" content="...">
+    other: {
+      "naver-site-verification": "64bc39a4b8cdafaa03250b70146458fd3183d54b",
+    },
   },
 };
 
