@@ -172,6 +172,17 @@ export function HomeClient({ articles, usingMock }: Props) {
               </svg>
               <span className="hidden sm:inline">AI 랭킹</span>
             </Link>
+            <Link
+              href="/education"
+              aria-label="AI 교육"
+              className="inline-flex h-9 shrink-0 select-none items-center gap-1.5 whitespace-nowrap rounded-full border-2 border-zinc-900/10 bg-white/70 px-3 text-sm font-bold text-zinc-700 transition-colors hover:bg-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-violet-500 active:scale-[0.97] dark:border-white/15 dark:bg-white/5 dark:text-zinc-300 dark:hover:bg-white/10"
+            >
+              {/* 졸업모자 — 포인트 색(바이올렛)으로 살짝 강조 */}
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4 text-violet-500">
+                <path d="M22 10 12 5 2 10l10 5 10-5zM6 12v5c0 1 2.7 2.5 6 2.5s6-1.5 6-2.5v-5" />
+              </svg>
+              <span className="hidden sm:inline">AI 교육</span>
+            </Link>
             <button
               type="button"
               onClick={() => setShowBookmarksOnly((v) => !v)}

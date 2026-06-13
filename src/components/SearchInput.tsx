@@ -3,9 +3,11 @@
 type Props = {
   value: string;
   onChange: (next: string) => void;
+  // 입력 <input> 에 덧붙일 추가 클래스(예: 교육 탭에서 cursor-default 주입). 미지정 시 홈 기본 동작 유지.
+  className?: string;
 };
 
-export function SearchInput({ value, onChange }: Props) {
+export function SearchInput({ value, onChange, className = "" }: Props) {
   return (
     <div className="relative w-full max-w-sm">
       <svg
@@ -26,7 +28,10 @@ export function SearchInput({ value, onChange }: Props) {
         value={value}
         onChange={(event) => onChange(event.target.value)}
         placeholder="검색..."
-        className="h-9 w-full rounded-full border-2 border-zinc-900/10 bg-white/70 pl-9 pr-3 text-sm text-zinc-900 placeholder:text-zinc-400 transition-colors focus-visible:border-violet-400 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-violet-500 dark:border-white/15 dark:bg-white/5 dark:text-zinc-100 dark:placeholder:text-zinc-500"
+        className={
+          "h-9 w-full rounded-full border-2 border-zinc-900/10 bg-white/70 pl-9 pr-3 text-sm text-zinc-900 placeholder:text-zinc-400 transition-colors focus-visible:border-violet-400 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-violet-500 dark:border-white/15 dark:bg-white/5 dark:text-zinc-100 dark:placeholder:text-zinc-500 " +
+          className
+        }
       />
     </div>
   );

@@ -124,6 +124,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
       <link
         rel="stylesheet"
         href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable.min.css"
+        precedence="default"
       />
       <body className="min-h-full bg-[#FBF6EC] font-sans text-zinc-900 dark:bg-[#0d0b14] dark:text-zinc-100">
         <script

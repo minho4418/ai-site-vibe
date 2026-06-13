@@ -1,0 +1,200 @@
+// AI 교육 탭의 강의 시드 목록 — AI 랭킹의 ai-tools.ts 와 같은 "직접 큐레이션" 방식.
+//  - 저장하는 건 메타데이터(제목·플랫폼·링크·카테고리·태그)뿐. 강의 본문/커리큘럼은 복제하지 않고
+//    카드 클릭 시 원본으로 링크아웃(target="_blank")한다. 뉴스 큐레이션과 동일한 안전 범위.
+//  - URL 은 웹 검색으로 실재를 확인한 것만 넣는다(지어내지 않는다).
+//  - 신규 강의는 이 배열에 한 줄 추가하면 됨. 추후 스크래핑/제휴 API 로 자동화 여지.
+
+export type CourseCategoryKey = "intro" | "llm" | "media" | "data" | "practice";
+
+export const COURSE_CATEGORIES: { key: CourseCategoryKey | "all"; label: string }[] = [
+  { key: "all", label: "전체" },
+  { key: "intro", label: "입문" },
+  { key: "llm", label: "LLM·에이전트" },
+  { key: "media", label: "이미지·영상" },
+  { key: "data", label: "데이터·ML" },
+  { key: "practice", label: "실무·활용" },
+];
+
+export type Course = {
+  title: string;
+  platform: string; // 표기 그대로(배지 색은 PLATFORM_BADGE 에서 매핑, 없으면 중립색)
+  url: string;
+  category: CourseCategoryKey;
+  level: "입문" | "중급" | "고급";
+  free: boolean; // 유튜브·공개강의 등 무료면 true → '무료' 배지/필터
+  tags: string[];
+};
+
+export const COURSES: Course[] = [
+  // ── 입문 ──────────────────────────────────────────────
+  {
+    title: "Claude Code 왕초보 입문 튜토리얼 (23가지 팁·50분)",
+    platform: "유튜브",
+    url: "https://www.youtube.com/watch?v=1_bRmkUvjHA",
+    category: "intro",
+    level: "입문",
+    free: true,
+    tags: ["클로드코드", "입문"],
+  },
+  {
+    title: "ChatGPT 101 : 직장인·크리에이터·비즈니스 활용법",
+    platform: "클래스101",
+    url: "https://class101.net/en/products/64584bb3fa7e16007638db72",
+    category: "intro",
+    level: "입문",
+    free: false,
+    tags: ["ChatGPT", "직장인"],
+  },
+  {
+    title: "조코딩 JoCoding — 코딩·AI 입문 채널",
+    platform: "유튜브",
+    url: "https://www.youtube.com/@jocoding",
+    category: "intro",
+    level: "입문",
+    free: true,
+    tags: ["코딩", "수익화", "노코드"],
+  },
+  {
+    title: "【한글자막】 No Code! 코딩없이 인공지능 구현하기",
+    platform: "Udemy",
+    url: "https://www.udemy.com/course/no-code-ai/",
+    category: "intro",
+    level: "입문",
+    free: false,
+    tags: ["노코드", "한글자막"],
+  },
+
+  // ── LLM·에이전트 ──────────────────────────────────────
+  {
+    title: "최고의 프롬프트 엔지니어링 (ft. 바이브 코딩)",
+    platform: "패스트캠퍼스",
+    url: "https://fastcampus.co.kr/data_red_golbin",
+    category: "llm",
+    level: "중급",
+    free: false,
+    tags: ["프롬프트", "바이브코딩"],
+  },
+  {
+    title: "AI 에이전트로 구현하는 RAG 시스템 (w. LangGraph)",
+    platform: "인프런",
+    url: "https://www.inflearn.com/course/ai%EC%97%90%EC%9D%B4%EC%A0%84%ED%8A%B8-%EA%B5%AC%ED%98%84-rag%EC%8B%9C%EC%8A%A4%ED%85%9C-%EB%9E%AD%EA%B7%B8%EB%9E%98%ED%94%84",
+    category: "llm",
+    level: "고급",
+    free: false,
+    tags: ["RAG", "LangGraph", "에이전트"],
+  },
+  {
+    title: "노마드코더 — AI 비서·멀티 에이전트·자동화",
+    platform: "유튜브",
+    url: "https://www.youtube.com/@nomadcoders",
+    category: "llm",
+    level: "중급",
+    free: true,
+    tags: ["에이전트", "자동화"],
+  },
+  {
+    title: "Claude의 모든 것 : Cowork·Code·Skills 200% 활용 (자동화·에이전트)",
+    platform: "패스트캠퍼스",
+    url: "https://fastcampus.co.kr/biz_online_claude",
+    category: "llm",
+    level: "중급",
+    free: false,
+    tags: ["클로드", "Claude Code", "자동화"],
+  },
+  {
+    title: "Anthropic Academy — Claude·Claude Code·MCP 공식 강좌",
+    platform: "Anthropic",
+    url: "https://www.anthropic.com/learn",
+    category: "llm",
+    level: "입문",
+    free: true,
+    tags: ["클로드", "Claude Code", "MCP", "영어"],
+  },
+  {
+    title: "클로드 코드 강의 모음전 (무료·유료)",
+    platform: "인프런",
+    url: "https://www.inflearn.com/pages/claudecode2026",
+    category: "llm",
+    level: "입문",
+    free: false,
+    tags: ["클로드코드", "강의모음"],
+  },
+  {
+    title: "테디노트 TeddyNote — LangChain·RAG 한국어 채널",
+    platform: "유튜브",
+    url: "https://www.youtube.com/channel/UCt2wAAXgm87ACiQnDHQEW6Q",
+    category: "llm",
+    level: "중급",
+    free: true,
+    tags: ["LangChain", "RAG", "딥러닝"],
+  },
+
+  // ── 이미지·영상 ───────────────────────────────────────
+  {
+    title: "왕초보를 위한 AI 디자인 바이블 (MJ·SD·Firefly)",
+    platform: "패스트캠퍼스",
+    url: "https://fastcampus.co.kr/data_online_aibeginner",
+    category: "media",
+    level: "입문",
+    free: false,
+    tags: ["미드저니", "Stable Diffusion", "디자인"],
+  },
+  {
+    title: "미드저니·SD로 만드는 하이퀄리티 이미지&영상",
+    platform: "패스트캠퍼스",
+    url: "https://fastcampus.co.kr/data_online_qualityai",
+    category: "media",
+    level: "중급",
+    free: false,
+    tags: ["미드저니", "Stable Diffusion", "영상"],
+  },
+  {
+    title: "Stable Diffusion 필독 가이드 (WebUI 세팅부터)",
+    platform: "패스트캠퍼스",
+    url: "https://fastcampus.co.kr/media_data_sd",
+    category: "media",
+    level: "중급",
+    free: false,
+    tags: ["Stable Diffusion", "WebUI"],
+  },
+  {
+    title: "생성형 AI 입문 7시간 완성 (Stable Diffusion)",
+    platform: "유튜브",
+    url: "https://www.youtube.com/watch?v=AS7uB1R9Z0s",
+    category: "media",
+    level: "입문",
+    free: true,
+    tags: ["Stable Diffusion", "이미지", "영상"],
+  },
+
+  // ── 데이터·ML ────────────────────────────────────────
+  {
+    title: "모두를 위한 머신러닝/딥러닝 (김성훈)",
+    platform: "공개강의",
+    url: "https://hunkim.github.io/ml/",
+    category: "data",
+    level: "입문",
+    free: true,
+    tags: ["머신러닝", "딥러닝", "기초"],
+  },
+  {
+    title: "DeepLearning.AI Short Courses (Andrew Ng)",
+    platform: "deeplearning.ai",
+    url: "https://www.deeplearning.ai/short-courses/",
+    category: "data",
+    level: "중급",
+    free: true,
+    tags: ["딥러닝", "Andrew Ng", "영어"],
+  },
+
+  // ── 실무·활용 ────────────────────────────────────────
+  {
+    title: "일잘러를 위한 700가지 ChatGPT 활용 바이블",
+    platform: "패스트캠퍼스",
+    url: "https://fastcampus.co.kr/biz_online_chatgpt700",
+    category: "practice",
+    level: "입문",
+    free: false,
+    tags: ["ChatGPT", "업무자동화"],
+  },
+];
