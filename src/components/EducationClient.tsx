@@ -119,8 +119,7 @@ export function EducationClient() {
           </button>
         )}
 
-        <div className="ml-auto flex shrink-0 items-center gap-2">
-          {/* 메뉴/팝오버 바깥 클릭 시 닫기용 백드롭 */}
+        {/* 메뉴/팝오버 바깥 클릭 시 닫기용 백드롭 */}
           {(sortOpen || infoOpen) && (
             <button
               type="button"
@@ -243,8 +242,7 @@ export function EducationClient() {
             )}
           </div>
 
-          <span className="text-xs tabular-nums text-zinc-400 dark:text-zinc-500">결과 {rows.length}개</span>
-        </div>
+        <span className="ml-auto text-xs tabular-nums text-zinc-400 dark:text-zinc-500">결과 {rows.length}개</span>
       </div>
 
       {rows.length === 0 ? (
