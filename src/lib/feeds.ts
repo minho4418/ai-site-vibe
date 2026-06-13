@@ -133,7 +133,8 @@ export const FEEDS: FeedSource[] = [
   // 실무 관점의 AI 적용 사례가 주력이라 fallback 은 Practice. 대부분 비-AI라 매 실행 0~2건 기여.
   { url: "https://d2.naver.com/d2.atom", source: "네이버 D2", category: "Practice", aiOnly: true, limit: 15 },
   { url: "https://tech.kakao.com/feed/", source: "카카오 기술블로그", category: "Practice", aiOnly: true, limit: 10 },
-  { url: "https://techblog.woowahan.com/feed/", source: "우아한형제들", category: "Practice", aiOnly: true, limit: 10 },
+  // 우아한형제들(techblog.woowahan.com)은 Cloudflare 가 Vercel 데이터센터 IP 를 봇으로 막아 매번 403.
+  // (가정용 IP 에선 봇 UA 로도 200 → UA 가 아니라 서버 IP 차단 이슈라 코드로 우회 불가) → 피드에서 제거.
   { url: "https://toss.tech/rss.xml", source: "토스 기술블로그", category: "Practice", aiOnly: true, limit: 10 },
   { url: "https://medium.com/feed/daangn", source: "당근 기술블로그", category: "Practice", aiOnly: true, limit: 10 },
   { url: "https://techblog.lycorp.co.jp/ko/feed/index.xml", source: "LINE 기술블로그", category: "Practice", aiOnly: true, limit: 15 },
