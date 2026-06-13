@@ -34,17 +34,30 @@ function canFetchBody(pageUrl: string): boolean {
   }
 }
 
-// 썸네일이 없을 때 보여줄 카테고리별 그라데이션 대체 이미지.
-const CATEGORY_GRADIENTS: Record<Article["category"], string> = {
-  Tools: "from-violet-500 via-purple-500 to-fuchsia-600",
-  LLM: "from-sky-500 via-blue-500 to-indigo-600",
-  OpenSource: "from-fuchsia-500 via-pink-500 to-purple-600",
-  Research: "from-cyan-500 via-teal-500 to-sky-600",
-  Practice: "from-emerald-500 via-teal-500 to-cyan-600",
-  Infra: "from-orange-500 via-red-500 to-amber-600",
-  Startup: "from-rose-500 via-pink-500 to-fuchsia-600",
-  Contest: "from-lime-500 via-green-500 to-emerald-600",
+// 썸네일이 없을 때 그릴 커버의 카테고리별 기준 색조(HSL hue).
+const CATEGORY_HUE: Record<Article["category"], number> = {
+  Tools: 265,
+  LLM: 205,
+  OpenSource: 300,
+  Research: 188,
+  Practice: 158,
+  Infra: 25,
+  Startup: 345,
+  Contest: 95,
 };
+
+function hashString(s: string): number {
+  let h = 0;
+  for (let i = 0; i < s.length; i++) h = (h * 31 + s.charCodeAt(i)) >>> 0;
+  return h;
+}
+
+// 카테고리 색조를 제목 해시로 ±12° 변주 → 같은 글은 항상 같은 색, 글마다는 다른 표지.
+function coverGradient(seed: string, baseHue: number): string {
+  const h = (baseHue + (hashString(seed) % 24) - 12 + 360) % 360;
+  const h2 = (h + 30) % 360;
+  return `linear-gradient(135deg, hsl(${h} 62% 42%), hsl(${h2} 70% 30%))`;
+}
 
 // "AI 코딩툴 (Google뉴스)" → "AI 코딩툴" 처럼 대체 이미지에 쓸 짧은 소스명.
 function cleanSource(source: string): string {
@@ -88,10 +101,11 @@ export function ArticleCard({
   onToggleBookmark,
 }: Props) {
   const categoryClasses = CATEGORY_COLORS[article.category];
-  const gradient = CATEGORY_GRADIENTS[article.category] ?? CATEGORY_GRADIENTS.LLM;
-  // 썸네일 URL 이 없거나, 있더라도 로딩에 실패하면(핫링크 차단·404 등) 그라데이션 대체 이미지를 쓴다.
+  // 썸네일 URL 이 없거나, 있더라도 로딩에 실패하면(핫링크 차단·404 등) 키워드 커버를 쓴다.
   const [imgFailed, setImgFailed] = useState(false);
   const showImage = Boolean(article.thumbnail_url) && !imgFailed;
+  // AI(Groq)가 뽑은 커버 키워드(최대 3개). 없으면 커버는 소스명으로 폴백.
+  const coverKeywords = (article.keywords ?? []).filter((k) => k && k.trim().length > 0).slice(0, 3);
   // 클릭 시 조회수를 즉시 +1 로 보여주기 위한 낙관적 플래그(좋아요 override 와 같은 사고방식).
   // 실제 DB 증가는 recordView 가 fire-and-forget 으로 처리하고, 화면엔 바로 반영한다.
   const [viewedLocally, setViewedLocally] = useState(false);
@@ -152,12 +166,16 @@ export function ArticleCard({
           </>
         ) : (
           // 썸네일이 없을 때: '가짜 사진'이 아니라 의도된 에디토리얼 커버.
-          // 카테고리 라벨을 거대 워터마크로 깔고, 그레인 + 소스명을 얹어 잡지 섹션 표지처럼 보이게 한다.
+          // AI(Groq)가 뽑은 핵심 키워드를 큰 타이포로 얹고, 카테고리 색조를 제목 해시로 변주해 글마다 다른 표지를 만든다.
+          // 키워드가 아직 없으면 카테고리 워터마크 + 소스명만으로 폴백.
           <div
-            className={
-              "grain relative flex h-full w-full select-none flex-col justify-end overflow-hidden bg-gradient-to-br p-4 transition-transform duration-300 group-hover:scale-[1.03] " +
-              gradient
-            }
+            className="grain relative flex h-full w-full select-none flex-col justify-end overflow-hidden p-4 transition-transform duration-300 group-hover:scale-[1.03]"
+            style={{
+              background: coverGradient(
+                String(article.id) + article.title,
+                CATEGORY_HUE[article.category] ?? 210,
+              ),
+            }}
           >
             {/* 광택 오버레이 */}
             <span
@@ -171,10 +189,28 @@ export function ArticleCard({
             >
               {CATEGORY_LABELS[article.category] ?? article.category}
             </span>
-            {/* 소스명 (표지 타이틀) */}
-            <span className="relative line-clamp-2 font-display text-xl leading-tight text-white drop-shadow-sm">
-              {cleanSource(article.source)}
-            </span>
+            {coverKeywords.length > 0 ? (
+              <>
+                {/* AI 키워드 (표지 타이틀) */}
+                <div className="relative font-display leading-[1.1] text-white drop-shadow-sm">
+                  {coverKeywords.map((kw, i) => (
+                    <div key={i} className="text-[1.35rem]">
+                      {kw}
+                    </div>
+                  ))}
+                </div>
+                {/* 소스명 (보조 라벨) */}
+                <span className="relative mt-2 flex items-center gap-1.5 text-[11px] font-bold text-white/90">
+                  <span aria-hidden="true" className="h-1 w-1 rounded-full bg-white/80" />
+                  {cleanSource(article.source)}
+                </span>
+              </>
+            ) : (
+              // 키워드 폴백: 소스명을 표지 타이틀로.
+              <span className="relative line-clamp-2 font-display text-xl leading-tight text-white drop-shadow-sm">
+                {cleanSource(article.source)}
+              </span>
+            )}
           </div>
         )}
         <span

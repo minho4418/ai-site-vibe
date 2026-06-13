@@ -50,6 +50,7 @@ type ArticleRow = {
   category: string;
   summary: string | null;
   ai_summary?: string | null;
+  keywords?: string[] | null;
   thumbnail_url: string | null;
   published_at: string;
   likes_count: number | null;
@@ -82,6 +83,7 @@ export async function getArticles(): Promise<{ articles: Article[]; usingMock: b
   // 선택 컬럼(views_count, ai_summary)이 있으면 함께 가져오고, 아직 SQL 을 안 돌려 없으면 단계적으로 빼고 재조회한다.
   // (실데이터 피드가 컬럼 미생성 때문에 mock 으로 떨어지지 않도록 graceful degradation)
   const COL_ATTEMPTS = [
+    `${BASE_COLS}, views_count, ai_summary, keywords`,
     `${BASE_COLS}, views_count, ai_summary`,
     `${BASE_COLS}, views_count`,
     BASE_COLS,
@@ -110,6 +112,7 @@ export async function getArticles(): Promise<{ articles: Article[]; usingMock: b
     summary: row.summary ?? "",
     // AI 한국어 요약이 있으면 우선 사용하고, 없으면 RSS 요약으로 폴백(소비처에서 처리).
     ai_summary: row.ai_summary ?? null,
+    keywords: row.keywords ?? null,
     thumbnail_url: row.thumbnail_url ?? null,
     published_at: row.published_at,
     likes_count: row.likes_count ?? 0,

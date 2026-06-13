@@ -19,6 +19,8 @@ create table if not exists public.articles (
   likes_count   integer not null default 0,
   -- 정규화한 제목 키. 크론 upsert 의 onConflict 대상(누적 중복 제거). 채움은 ingest 코드가 담당.
   title_key     text,
+  -- 썸네일 없는 카드 커버에 큰 타이포로 얹을 핵심 키워드 2~3개. Groq 요약 단계가 함께 채움.
+  keywords      text[],
   created_at    timestamptz not null default now()
 );
 
