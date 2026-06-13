@@ -17,11 +17,15 @@ create table if not exists public.articles (
   thumbnail_url text,
   published_at  timestamptz not null,
   likes_count   integer not null default 0,
+  -- 정규화한 제목 키. 크론 upsert 의 onConflict 대상(누적 중복 제거). 채움은 ingest 코드가 담당.
+  title_key     text,
   created_at    timestamptz not null default now()
 );
 
 create index if not exists articles_published_at_idx on public.articles (published_at desc);
 create index if not exists articles_category_idx     on public.articles (category);
+-- title_key UNIQUE — 같은 제목이 url 만 달리해 중복 저장되는 것을 DB 차원에서 차단.
+create unique index if not exists articles_title_key_key on public.articles (title_key);
 
 -- ──────────────────────────────────────────────────────────────────────────
 -- 2. bookmarks : 기기별 익명 UUID 스코프 (로그인 없음)

@@ -33,6 +33,8 @@ type ArticleRow = {
   summary: string;
   thumbnail_url: string | null;
   published_at: string;
+  // 누적 DB 전반의 근접중복 식별자. upsert onConflict 대상이라 같은 제목은 실행을 넘나들어도 1건만 유지된다.
+  title_key: string;
 };
 
 function pickPublishedAt(item: RawItem, ingestStart: number, index: number): string {
@@ -122,19 +124,24 @@ export async function GET(request: Request) {
         // 품질 게이트: 제목이 지나치게 짧은(공백 제외 6자 미만) 항목은 제외(빈/깨진 제목 방지).
         .filter(({ title }) => title.replace(/\s/g, "").length >= 6)
         .slice(0, limit)
-        .map(({ item, title, summary }, index) => ({
-          url: normalizeUrl(item.link!),
-          title,
-          source: feed.source,
-          // forceCategory 면 피드 기본값 고정, 아니면 키워드로 재분류(실패 시 기본값).
-          category: feed.forceCategory
-            ? feed.category
-            : classifyCategory(`${title} ${summary}`) ?? feed.category,
-          summary,
-          thumbnail_url: extractThumbnail(item),
-          // RSS 가 시간을 안 주면 ingest 시작 시점에서 index*1초 만큼 과거로 분산시켜 RSS 순서(최신→오래된)를 보존.
-          published_at: pickPublishedAt(item, ingestStart, index),
-        }));
+        .map(({ item, title, summary }, index) => {
+          const url = normalizeUrl(item.link!);
+          return {
+            url,
+            title,
+            source: feed.source,
+            // forceCategory 면 피드 기본값 고정, 아니면 키워드로 재분류(실패 시 기본값).
+            category: feed.forceCategory
+              ? feed.category
+              : classifyCategory(`${title} ${summary}`) ?? feed.category,
+            summary,
+            thumbnail_url: extractThumbnail(item),
+            // RSS 가 시간을 안 주면 ingest 시작 시점에서 index*1초 만큼 과거로 분산시켜 RSS 순서(최신→오래된)를 보존.
+            published_at: pickPublishedAt(item, ingestStart, index),
+            // 제목 정규화 키. 빈 키(기호/비라틴 제목 등)는 url 로 폴백해 서로 뭉개지지 않게 한다.
+            title_key: titleKey(title, isGoogleNewsUrl(url)) || `url:${url}`,
+          };
+        });
       return rows;
     }),
   );
@@ -152,19 +159,20 @@ export async function GET(request: Request) {
     }
   });
 
-  // 2) 전 피드를 가로질러 근접중복 제거. 같은 제목키면 직링크를 Google News 보다 우선해 1건만 남긴다.
+  // 2) 전 피드를 가로질러 근접중복 제거. 같은 title_key 면 직링크를 Google News 보다 우선해 1건만 남긴다.
   //    Map 은 삽입 순서를 보존하므로 먼저 들어온(피드 우선순위 높은) 직링크가 유지된다.
+  //    실행 단위 중복은 여기서, 누적 DB 전반의 중복은 onConflict:"title_key" upsert(아래 4단계)가 막는다.
   const seen = new Map<string, ArticleRow>();
   for (const row of candidates) {
-    const gnews = isGoogleNewsUrl(row.url);
-    const key = titleKey(row.title, gnews) || `url:${row.url}`;
-    const existing = seen.get(key);
+    const existing = seen.get(row.title_key);
     if (!existing) {
-      seen.set(key, row);
+      seen.set(row.title_key, row);
       continue;
     }
     // 기존이 Google News 이고 새 후보가 직링크면 교체(본문·og:image 가능한 직링크 우선).
-    if (isGoogleNewsUrl(existing.url) && !gnews) seen.set(key, row);
+    if (isGoogleNewsUrl(existing.url) && !isGoogleNewsUrl(row.url)) {
+      seen.set(row.title_key, row);
+    }
   }
   const deduped = [...seen.values()];
 
@@ -180,13 +188,14 @@ export async function GET(request: Request) {
   let ogBudget = 40;
   ogBudget = await enrichThumbnails(deduped, ogBudget);
 
-  // 4) 단일 upsert. ignoreDuplicates=false → 같은 URL row 는 새 RSS 데이터로 갱신.
+  // 4) 단일 upsert. onConflict:"title_key" → 같은 제목이면 url 이 달라도(직링크↔구글뉴스, 매체간 와이어 카피)
+  //    DB 의 기존 1건을 갱신해 누적 중복을 원천 차단. (title_key UNIQUE 인덱스 필요 — migrations/002 참고.)
   //    articles.likes_count / ai_summary 는 rows 에 없으므로 기존 값이 유지된다.
   let totalUpserted = 0;
   if (deduped.length > 0) {
     const { error, count } = await supabase
       .from("articles")
-      .upsert(deduped, { onConflict: "url", count: "exact" });
+      .upsert(deduped, { onConflict: "title_key", count: "exact" });
     if (error) {
       results.push({ source: "upsert", error: error.message });
     } else {
