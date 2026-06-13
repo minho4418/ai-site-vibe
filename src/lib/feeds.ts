@@ -26,10 +26,8 @@ const googleNewsKR = (query: string) =>
 export const FEEDS: FeedSource[] = [
   // ── 한국 개발자/스타트업 커뮤니티 (AI 관련 글만 필터링) ────────────────
   { url: "https://news.hada.io/rss/news", source: "GeekNews", category: "Practice", aiOnly: true, limit: 30 },
-  { url: "https://yozm.wishket.com/magazine/feed/", source: "요즘IT", category: "Practice", aiOnly: true, limit: 15 },
-  // 벤처스퀘어: 한국 스타트업 전문 매체. 투자·창업·아이디어톤/경진대회 소식이 많아
-  // 창업(Startup)·공모전(Contest) 카테고리를 채운다. aiOnly 로 AI 관련 글만 수집.
-  { url: "https://www.venturesquare.net/feed", source: "벤처스퀘어", category: "Startup", aiOnly: true, limit: 20 },
+  // 요즘IT·벤처스퀘어 제거: 두 매체 모두 "무단 전재·복사·배포 금지"를 명시한 곳이라
+  // 상업 운영 시 저작권 위험이 가장 큼. 국내 창업/실무 소식은 아래 Google News(창업·실무) 피드로 커버된다.
 
   // ── 한국어 AI 뉴스 (Google News 검색, 카테고리별 키워드 스코프) ──────
   {
@@ -105,6 +103,14 @@ export const FEEDS: FeedSource[] = [
   { url: "https://blog.google/technology/ai/rss/", source: "Google AI", category: "Research", limit: 6 },
   { url: "https://deepmind.google/blog/rss.xml", source: "Google DeepMind", category: "Research", limit: 6 },
   { url: "https://huggingface.co/blog/feed.xml", source: "Hugging Face", category: "OpenSource", limit: 8 },
+  // ── 공식 기업/연구 블로그 (저작권 안전: 홍보 목적 배포 + 최신·고품질) ─────────────
+  // 모두 RSS 생존 확인됨(2026-06). 회사/기관이 직접 배포 → 헤드라인+요약+링크 모델에 우호적.
+  { url: "https://research.google/blog/rss/", source: "Google Research", category: "Research", aiOnly: true, limit: 6 },
+  // NVIDIA 블로그는 게이밍 등 비-AI 글도 섞여 aiOnly 로 필터.
+  { url: "https://blogs.nvidia.com/feed/", source: "NVIDIA 블로그", category: "Infra", aiOnly: true, limit: 8 },
+  { url: "https://news.microsoft.com/source/topics/ai/feed/", source: "Microsoft AI", category: "LLM", limit: 6 },
+  { url: "https://aws.amazon.com/blogs/machine-learning/feed/", source: "AWS ML", category: "Practice", aiOnly: true, limit: 6 },
+  { url: "https://bair.berkeley.edu/blog/feed.xml", source: "Berkeley BAIR", category: "Research", limit: 4 },
   // GitHub 일간 트렌딩(전 언어). repo 는 본질적으로 오픈소스라 forceCategory 로 OpenSource 고정.
   // aiOnly 로 AI 관련 repo만 남김(요즘 트렌딩은 대부분 AI). 정적 호스팅(GitHub Pages) RSS — 죽으면 graceful 스킵.
   {
@@ -115,7 +121,8 @@ export const FEEDS: FeedSource[] = [
     forceCategory: true,
     limit: 12,
   },
-  { url: "https://www.technologyreview.com/topic/artificial-intelligence/feed/", source: "MIT Tech Review", category: "LLM", limit: 6 },
+  // MIT Tech Review 제거: 본문이 페이월이라 원문 링크를 눌러도 못 읽고(UX 저하),
+  // 재사용 제약도 큰 매체. 연구 카테고리는 Google Research·BAIR 로 대체.
   { url: "https://venturebeat.com/category/ai/feed/", source: "VentureBeat", category: "LLM", limit: 8 },
   { url: "https://arstechnica.com/ai/feed/", source: "Ars Technica", category: "LLM", limit: 8 },
   // 고신호 개인 블로그/뉴스레터 (AI 엔지니어들이 실제로 보는 곳)
