@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import Link from "next/link";
 
 import { EducationClient } from "@/components/EducationClient";
 
@@ -18,29 +17,6 @@ export const metadata: Metadata = {
 };
 
 export default function EducationPage() {
-  return (
-    <div className="min-h-dvh text-zinc-900 dark:text-zinc-100">
-      <header className="sticky top-0 z-30 border-b border-zinc-900/10 bg-[#FBF6EC]/80 backdrop-blur-md dark:border-white/10 dark:bg-[#0d0b14]/80">
-        <div className="mx-auto flex max-w-4xl items-center justify-between gap-3 px-4 py-3">
-          <Link
-            href="/"
-            className="flex w-fit items-center gap-2.5 rounded-xl transition-opacity hover:opacity-80 active:scale-[0.98]"
-          >
-            <div className="grain relative flex h-9 w-9 items-center justify-center overflow-hidden rounded-xl bg-gradient-to-br from-fuchsia-500 via-purple-500 to-orange-400 text-white shadow-[0_4px_14px_-4px_rgba(168,85,247,0.6)]">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round" className="relative h-5 w-5">
-                <path d="M8 5v14M8 12l8-7M8 12l8 7" />
-              </svg>
-            </div>
-            <span className="font-display text-xl tracking-tight">Knewit</span>
-          </Link>
-          <span className="text-sm font-bold text-zinc-500 dark:text-zinc-400">🎓 AI 교육</span>
-        </div>
-      </header>
-
-      <main className="mx-auto max-w-4xl select-none px-4 py-6">
-        <h1 className="mb-5 font-display text-3xl tracking-tight">AI 교육</h1>
-        <EducationClient />
-      </main>
-    </div>
-  );
+  // 헤더(로고=페이지 초기화)·본문은 EducationClient 가 소유한다. (로고 클릭으로 클라이언트 상태 리셋)
+  return <EducationClient />;
 }

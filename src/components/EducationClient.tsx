@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useMemo, useState } from "react";
 
 import { SearchInput } from "@/components/SearchInput";
@@ -63,8 +64,53 @@ export function EducationClient() {
 
   const toggleTag = (t: string) => setActiveTag((prev) => (prev === t ? null : t));
 
+  // 로고 클릭 → 처음 들어온 상태로 리셋(모든 필터·검색·정렬 초기화 + 맨 위로). 홈 화면 로고와 동일한 동작.
+  const resetToInitial = () => {
+    setTab("all");
+    setFreeOnly(false);
+    setQuery("");
+    setActiveTag(null);
+    setSort("level-asc");
+    setSortOpen(false);
+    setInfoOpen(false);
+    if (typeof window !== "undefined") {
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+  };
+
   return (
-    <>
+    <div className="min-h-dvh text-zinc-900 dark:text-zinc-100">
+      <header className="sticky top-0 z-30 border-b border-zinc-900/10 bg-[#FBF6EC]/80 backdrop-blur-md dark:border-white/10 dark:bg-[#0d0b14]/80">
+        <div className="mx-auto flex max-w-4xl items-center justify-between gap-3 px-4 py-3">
+          <button
+            type="button"
+            onClick={resetToInitial}
+            aria-label="교육 처음 화면으로 (필터 초기화 · 맨 위로)"
+            className="flex w-fit cursor-pointer items-center gap-2.5 rounded-xl transition-opacity hover:opacity-80 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-violet-500 active:scale-[0.98]"
+          >
+            <div className="grain relative flex h-9 w-9 items-center justify-center overflow-hidden rounded-xl bg-gradient-to-br from-fuchsia-500 via-purple-500 to-orange-400 text-white shadow-[0_4px_14px_-4px_rgba(168,85,247,0.6)]">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round" className="relative h-5 w-5">
+                <path d="M8 5v14M8 12l8-7M8 12l8 7" />
+              </svg>
+            </div>
+            <span className="font-display text-xl tracking-tight">Knewit</span>
+          </button>
+          <Link
+            href="/"
+            aria-label="오늘의 AI 뉴스로 돌아가기"
+            className="inline-flex h-9 shrink-0 select-none items-center gap-1.5 whitespace-nowrap rounded-full border-2 border-violet-500/30 bg-violet-500/10 px-3.5 text-sm font-bold text-violet-700 transition-colors hover:bg-violet-500/15 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-violet-500 active:scale-[0.97] dark:border-violet-400/30 dark:bg-violet-400/10 dark:text-violet-300 dark:hover:bg-violet-400/15"
+          >
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4">
+              <path d="m12 19-7-7 7-7M19 12H5" />
+            </svg>
+            오늘의 AI 뉴스
+          </Link>
+        </div>
+      </header>
+
+      <main className="mx-auto max-w-4xl select-none px-4 py-6">
+        <h1 className="mb-5 font-display text-3xl tracking-tight">AI 교육</h1>
+
       <div className="mb-3 w-full max-w-[14rem]">
         {/* 본문(main)은 select-none 이라 텍스트 위에서도 i-beam 이 안 뜬다.
             검색 입력창만 select-text 로 되돌려 정상적으로 선택·편집 가능하게 한다. */}
@@ -332,6 +378,7 @@ export function EducationClient() {
       <p className="mt-6 text-center text-xs text-zinc-400 dark:text-zinc-500">
         큐레이션 목록 · 클릭 시 각 플랫폼 원본 강의로 이동합니다
       </p>
-    </>
+      </main>
+    </div>
   );
 }
