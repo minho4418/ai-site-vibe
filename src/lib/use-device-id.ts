@@ -21,6 +21,7 @@ export function useDeviceId() {
         value = generateId();
         window.localStorage.setItem(STORAGE_KEY, value);
       }
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- 마운트 시 localStorage 에서 device id 읽어 동기화(의도된 패턴)
       setId(value);
     } catch {
       // Storage blocked (private mode etc.) — fall back to in-memory only.

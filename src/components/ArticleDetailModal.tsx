@@ -29,6 +29,7 @@ export function ArticleDetailModal({ articleId, title, source, url, onClose }: P
   useEffect(() => {
     let alive = true;
     const ctrl = new AbortController();
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- articleId 변경 시 로딩 상태로 리셋 후 fetch(의도된 패턴)
     setState({ status: "loading" });
     (async () => {
       try {

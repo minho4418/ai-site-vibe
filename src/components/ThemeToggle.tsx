@@ -7,6 +7,7 @@ export function ThemeToggle() {
   const { resolvedTheme, setTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
 
+  // eslint-disable-next-line react-hooks/set-state-in-effect -- SSR hydration 가드: 마운트 표시만 1회 설정(의도된 패턴)
   useEffect(() => setMounted(true), []);
 
   const isDark = mounted && resolvedTheme === "dark";

@@ -185,8 +185,8 @@ export async function GET(request: Request) {
   }
 
   // 3) RSS 에 이미지가 없는 직링크 기사에 og:image 보강(Google News 는 자동 제외). 전체 dedup 셋에 한 번만.
-  let ogBudget = 40;
-  ogBudget = await enrichThumbnails(deduped, ogBudget);
+  const ogBudget = 40;
+  await enrichThumbnails(deduped, ogBudget);
 
   // 4) 단일 upsert. onConflict:"title_key" → 같은 제목이면 url 이 달라도(직링크↔구글뉴스, 매체간 와이어 카피)
   //    DB 의 기존 1건을 갱신해 누적 중복을 원천 차단. (title_key UNIQUE 인덱스 필요 — migrations/002 참고.)

@@ -23,6 +23,7 @@ export function useLikes(deviceId: string | null) {
 
     if (!supabase) {
       // Supabase 미설정 (목업 모드) — 빈 Set 으로 시작.
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- Supabase 미설정(목업) 시 빈 상태로 마운트 hydration(의도된 패턴)
       setHydrated(true);
       return;
     }

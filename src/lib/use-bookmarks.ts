@@ -35,6 +35,7 @@ export function useBookmarks(deviceId: string | null) {
 
     if (!supabase) {
       // Supabase not configured → keep working with localStorage only.
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- Supabase 미설정 시 localStorage 값으로 마운트 hydration(의도된 패턴)
       setSet(new Set(readLocal()));
       setHydrated(true);
       return;

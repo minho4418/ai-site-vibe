@@ -76,7 +76,7 @@ export default function OpengraphImage() {
         </div>
 
         <div style={{ display: "flex", marginTop: "48px", fontSize: "48px", fontWeight: 700, color: "rgba(255,255,255,0.82)", letterSpacing: "2px" }}>
-          TODAY'S AI NEWS
+          {"TODAY'S AI NEWS"}
         </div>
         <div style={{ display: "flex", marginTop: "16px", fontSize: "30px", color: "rgba(255,255,255,0.5)" }}>
           knew it — ahead of the AI curve
