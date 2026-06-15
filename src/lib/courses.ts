@@ -104,11 +104,20 @@ export const COURSES: Course[] = [
   {
     title: "Anthropic Academy — Claude·Claude Code·MCP 공식 강좌",
     platform: "Anthropic",
-    url: "https://www.anthropic.com/learn",
+    url: "https://anthropic.skilljar.com/",
     category: "llm",
     level: "입문",
     free: true,
     tags: ["클로드", "Claude Code", "MCP", "영어"],
+  },
+  {
+    title: "클로드 코드 완벽 마스터: AI 개발 워크플로우 기초부터 실전까지",
+    platform: "인프런",
+    url: "https://www.inflearn.com/course/%ED%81%B4%EB%A1%9C%EB%93%9C-%EC%BD%94%EB%93%9C-%EC%99%84%EB%B2%BD-%EB%A7%88%EC%8A%A4%ED%84%B0-ai-%EA%B0%9C%EB%B0%9C",
+    category: "llm",
+    level: "중급",
+    free: false,
+    tags: ["클로드코드", "Claude Code", "MCP", "에이전트"],
   },
   {
     title: "클로드 코드 강의 모음전 (무료·유료)",
@@ -178,6 +187,15 @@ export const COURSES: Course[] = [
     tags: ["머신러닝", "딥러닝", "기초"],
   },
   {
+    title: "혁펜하임 — Easy! 딥러닝·머신러닝 강의 채널 (KAIST PhD)",
+    platform: "유튜브",
+    url: "https://www.youtube.com/@hyukppen",
+    category: "data",
+    level: "입문",
+    free: true,
+    tags: ["딥러닝", "머신러닝", "기초"],
+  },
+  {
     title: "DeepLearning.AI Short Courses (Andrew Ng)",
     platform: "deeplearning.ai",
     url: "https://www.deeplearning.ai/short-courses/",
@@ -196,5 +214,14 @@ export const COURSES: Course[] = [
     level: "입문",
     free: false,
     tags: ["ChatGPT", "업무자동화"],
+  },
+  {
+    title: "1일 1바이브코딩 30개 프로젝트 완성: Cursor AI × Claude Code로 돈 버는 웹&앱 만들기",
+    platform: "패스트캠퍼스",
+    url: "https://fastcampus.co.kr/biz_online_vibecoding30",
+    category: "practice",
+    level: "입문",
+    free: false,
+    tags: ["바이브코딩", "Cursor AI", "Claude Code", "수익화"],
   },
 ];
