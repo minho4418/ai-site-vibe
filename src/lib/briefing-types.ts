@@ -22,6 +22,13 @@ function asString(v: unknown): string {
   return typeof v === "string" ? v.trim() : "";
 }
 
+// 제목 끝의 "— …데일리 브리핑" 류 보일러플레이트 접미사를 제거한다.
+// 사이트가 날짜를 따로 표시하므로 "헤드라인 — 2026년 6월 16일 AI·개발자 데일리 브리핑"
+// 같은 중복 꼬리표를 떼어 핵심 헤드라인만 남긴다. 구분자(—–-|) 뒤가 "…브리핑"으로 끝날 때만.
+function cleanTitle(raw: string): string {
+  return raw.replace(/\s*[—–\-|]\s*[^—–\-|]*브리핑\s*$/u, "").trim();
+}
+
 function parseItem(raw: unknown): BriefingItem | null {
   if (!raw || typeof raw !== "object") return null;
   const o = raw as Record<string, unknown>;
@@ -63,7 +70,7 @@ export function parseBriefing(raw: unknown, fallbackDate?: string): Briefing | n
 
   return {
     date,
-    title: asString(o.title) || undefined,
+    title: cleanTitle(asString(o.title)) || undefined,
     summary: asString(o.summary) || undefined,
     sections,
     pick: parseItem(o.pick),
