@@ -1,0 +1,42 @@
+name: Publish Briefing
+
+# 클라우드 "데일리 브리핑" 루틴이 egress 제약으로 knewittoday.com 에 직접 POST 하지 못한다.
+# 대신 (그 환경에서 열려 있는) GitHub 로 이 워크플로를 dispatch 하면, 인터넷이 열린 GitHub
+# Actions 러너가 대신 /api/briefing 으로 발행한다. 브리핑 JSON 은 커밋하지 않고 dispatch 입력으로만 전달.
+# 토큰(BRIEFING_TOKEN)은 repo 의 Actions Secret 에 저장한다(Vercel env·루틴과 같은 값).
+
+on:
+  workflow_dispatch:
+    inputs:
+      payload_b64:
+        description: "Base64(-w0)-encoded briefing JSON"
+        required: true
+        type: string
+
+jobs:
+  publish:
+    name: Publish to /api/briefing
+    runs-on: ubuntu-latest
+    steps:
+      - name: Decode, validate, and publish
+        env:
+          PAYLOAD_B64: ${{ inputs.payload_b64 }}
+          BRIEFING_TOKEN: ${{ secrets.BRIEFING_TOKEN }}
+        run: |
+          set -euo pipefail
+          if [ -z "${BRIEFING_TOKEN:-}" ]; then
+            echo "::error::BRIEFING_TOKEN secret is not set in repo Actions secrets."
+            exit 1
+          fi
+          printf '%s' "$PAYLOAD_B64" | base64 -d > body.json
+          echo "decoded $(wc -c < body.json) bytes"
+          # JSON 유효성 사전 검증(깨진 입력이면 여기서 실패).
+          node -e "JSON.parse(require('fs').readFileSync('body.json','utf8'))"
+          code=$(curl -sS -o resp.json -w '%{http_code}' -X POST https://knewittoday.com/api/briefing \
+            -H "Authorization: Bearer ${BRIEFING_TOKEN}" \
+            -H "Content-Type: application/json" \
+            --data-binary @body.json)
+          echo "HTTP ${code}"
+          cat resp.json || true
+          echo
+          test "${code}" = "200"
