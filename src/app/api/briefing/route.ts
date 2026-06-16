@@ -6,11 +6,12 @@ export const runtime = "nodejs";
 
 // 오늘의 브리핑 발행 엔드포인트. 클라우드 "데일리 브리핑" 루틴이 리서치 결과(JSON)를
 // 여기로 POST 하면 서비스 롤로 daily_briefings 에 upsert 한다.
-// 루틴 샌드박스엔 Supabase 키가 없으므로, 인증은 ingest 와 같은 CRON_SECRET Bearer 토큰을 재사용.
+// 루틴 샌드박스엔 Supabase 키가 없으므로, 전용 Bearer 토큰 BRIEFING_TOKEN 으로 인증한다
+// (ingest 의 CRON_SECRET 과 분리 → 노출돼도 '브리핑 발행'으로만 영향 제한).
 export async function POST(request: Request) {
-  const expected = process.env.CRON_SECRET;
+  const expected = process.env.BRIEFING_TOKEN;
   if (!expected) {
-    return Response.json({ error: "CRON_SECRET env var is not configured." }, { status: 500 });
+    return Response.json({ error: "BRIEFING_TOKEN env var is not configured." }, { status: 500 });
   }
   if (request.headers.get("authorization") !== `Bearer ${expected}`) {
     return new Response("Unauthorized", { status: 401 });
