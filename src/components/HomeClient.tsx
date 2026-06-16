@@ -5,10 +5,12 @@ import { useDeferredValue, useEffect, useMemo, useState } from "react";
 
 import { ArticleCard } from "@/components/ArticleCard";
 import { CategoryFilter } from "@/components/CategoryFilter";
+import { DailyHero } from "@/components/DailyHero";
 import { KeywordRail } from "@/components/KeywordRail";
 import { SearchInput } from "@/components/SearchInput";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { fetchArticlesByIds } from "@/lib/articles-client";
+import type { Briefing } from "@/lib/briefings";
 import { CATEGORIES, type CategoryId } from "@/lib/categories";
 import type { Article } from "@/lib/types";
 import { useBookmarks } from "@/lib/use-bookmarks";
@@ -18,6 +20,8 @@ import { useLikes } from "@/lib/use-likes";
 type Props = {
   articles: Article[];
   usingMock: boolean;
+  // 최신 오늘의 브리핑(파일 기반). 없으면 null → 히어로 미표시.
+  briefing: Briefing | null;
 };
 
 // 🔥인기 배지 기준 (design-system.md §4): 갯수 임계값 없이, 조회수 '높은순 상위 20%'.
@@ -33,7 +37,7 @@ const SORT_OPTIONS: { key: SortKey; label: string }[] = [
   { key: "likes", label: "좋아요순" },
 ];
 
-export function HomeClient({ articles, usingMock }: Props) {
+export function HomeClient({ articles, usingMock, briefing }: Props) {
   const [category, setCategory] = useState<CategoryId>("all");
   // 모바일에서 카테고리 탭(9개)이 3~4줄로 펼쳐져 sticky 헤더가 화면을 덮는 걸 막기 위한 접기/펼치기.
   // 데스크탑(sm+)은 항상 펼쳐 두므로 이 상태는 모바일에만 영향.
@@ -162,6 +166,18 @@ export function HomeClient({ articles, usingMock }: Props) {
           <div className="flex items-center gap-2">
             <SearchInput value={query} onChange={setQuery} />
             <Link
+              href="/daily"
+              aria-label="오늘의 브리핑"
+              className="inline-flex h-9 shrink-0 select-none items-center gap-1.5 whitespace-nowrap rounded-full border-2 border-zinc-900/10 bg-white/70 px-3 text-sm font-bold text-zinc-700 transition-colors hover:bg-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-violet-500 active:scale-[0.97] dark:border-white/15 dark:bg-white/5 dark:text-zinc-300 dark:hover:bg-white/10"
+            >
+              {/* 달력 — 포인트 색(푸시아)으로 살짝 강조 */}
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4 text-fuchsia-500">
+                <rect x="3" y="4" width="18" height="18" rx="2" />
+                <path d="M16 2v4M8 2v4M3 10h18" />
+              </svg>
+              <span className="hidden sm:inline">오늘의 브리핑</span>
+            </Link>
+            <Link
               href="/ranking"
               aria-label="AI 랭킹"
               className="inline-flex h-9 shrink-0 select-none items-center gap-1.5 whitespace-nowrap rounded-full border-2 border-zinc-900/10 bg-white/70 px-3 text-sm font-bold text-zinc-700 transition-colors hover:bg-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-violet-500 active:scale-[0.97] dark:border-white/15 dark:bg-white/5 dark:text-zinc-300 dark:hover:bg-white/10"
@@ -239,6 +255,11 @@ export function HomeClient({ articles, usingMock }: Props) {
       </header>
 
       <main className="mx-auto max-w-6xl px-4 py-6">
+        {/* ── 오늘의 브리핑 히어로: 기본 화면(필터·검색·북마크·키워드 미적용)에서만 노출 ── */}
+        {briefing && category === "all" && !deferredQuery.trim() && !showBookmarksOnly && !keyword && (
+          <DailyHero briefing={briefing} />
+        )}
+
         {/* ── 오늘의 키워드 (가져온 카드 제목 빈도순 상위 5) — 칩 클릭 시 제목 필터 ── */}
         <KeywordRail
           articles={articles}

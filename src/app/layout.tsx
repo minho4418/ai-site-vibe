@@ -51,7 +51,13 @@ export const metadata: Metadata = {
     "Knewit",
   ],
   // 홈의 정식 주소를 명시 → 중복 URL(쿼리·트래킹 파라미터) 색인 방지.
-  alternates: { canonical: "/" },
+  // types → <link rel="alternate" type="application/rss+xml">: RSS 리더가 사이트 주소만으로 피드를 자동 발견.
+  alternates: {
+    canonical: "/",
+    types: {
+      "application/rss+xml": [{ url: "/feed.xml", title: "Knewit - 오늘의 AI 뉴스" }],
+    },
+  },
   openGraph: {
     title: "Knewit - 오늘의 AI 뉴스",
     description: SITE_DESCRIPTION,

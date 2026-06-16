@@ -154,3 +154,24 @@ grant select, insert, delete on public.bookmarks to anon;
 grant select, insert, delete on public.likes to anon;
 grant execute on function public.increment_likes(uuid, text) to anon;
 grant execute on function public.decrement_likes(uuid, text) to anon;
+
+-- ──────────────────────────────────────────────────────────────────────────
+-- 7. daily_briefings : '오늘의 브리핑' (migration 004)
+--    데일리 브리핑 루틴이 /api/briefing 으로 POST → service role 로 upsert.
+--    payload(jsonb) 에 Briefing 객체 전체, date 는 PK(정렬·조회 키). read 는 공개.
+-- ──────────────────────────────────────────────────────────────────────────
+create table if not exists public.daily_briefings (
+  date        date primary key,
+  payload     jsonb not null,
+  created_at  timestamptz not null default now(),
+  updated_at  timestamptz not null default now()
+);
+
+create index if not exists daily_briefings_date_idx on public.daily_briefings (date desc);
+
+alter table public.daily_briefings enable row level security;
+
+drop policy if exists "daily_briefings_read" on public.daily_briefings;
+create policy "daily_briefings_read" on public.daily_briefings for select using (true);
+
+grant select on public.daily_briefings to anon;
