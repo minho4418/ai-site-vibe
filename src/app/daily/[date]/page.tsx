@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { notFound } from "next/navigation";
 
 import { BriefingView } from "@/components/BriefingView";
@@ -47,7 +48,7 @@ export default async function DailyDatePage({ params }: Params) {
         <BriefingView briefing={briefing} />
 
         <div className="mt-10 border-t border-zinc-900/10 pt-6 dark:border-white/10">
-          <a
+          <Link
             href="/daily"
             className="inline-flex items-center gap-1.5 text-sm font-bold text-violet-600 transition-colors hover:text-violet-700 dark:text-violet-400 dark:hover:text-violet-300"
           >
@@ -55,7 +56,7 @@ export default async function DailyDatePage({ params }: Params) {
               <path d="m15 18-6-6 6-6" />
             </svg>
             지난 브리핑 모두 보기
-          </a>
+          </Link>
         </div>
       </main>
 
