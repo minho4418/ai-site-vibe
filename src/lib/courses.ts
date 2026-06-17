@@ -137,6 +137,24 @@ export const COURSES: Course[] = [
     free: true,
     tags: ["LangChain", "RAG", "딥러닝"],
   },
+  {
+    title: "테디노트의 RAG 비법노트: 랭체인 기반의 GPT·로컬 모델부터 LangGraph·Agent까지",
+    platform: "패스트캠퍼스",
+    url: "https://fastcampus.co.kr/data_online_teddy",
+    category: "llm",
+    level: "고급",
+    free: false,
+    tags: ["LangChain", "RAG", "LangGraph", "에이전트"],
+  },
+  {
+    title: "Claude Code × Codex로 10배 똑똑한 AI Agent 팀 구축부터 운영까지",
+    platform: "패스트캠퍼스",
+    url: "https://fastcampus.co.kr/biz_online_claudecodex",
+    category: "llm",
+    level: "고급",
+    free: false,
+    tags: ["클로드코드", "Claude Code", "Codex", "에이전트"],
+  },
 
   // ── 이미지·영상 ───────────────────────────────────────
   {
@@ -174,6 +192,15 @@ export const COURSES: Course[] = [
     level: "입문",
     free: true,
     tags: ["Stable Diffusion", "이미지", "영상"],
+  },
+  {
+    title: "2026 AI 영상 마스터클래스: 광고·콘텐츠·숏폼까지 무한 확장",
+    platform: "패스트캠퍼스",
+    url: "https://fastcampus.co.kr/dgn_online_aiall",
+    category: "media",
+    level: "중급",
+    free: false,
+    tags: ["AI영상", "광고", "숏폼", "콘텐츠"],
   },
 
   // ── 데이터·ML ────────────────────────────────────────
