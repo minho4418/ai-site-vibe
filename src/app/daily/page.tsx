@@ -28,7 +28,7 @@ export default async function DailyIndexPage() {
       <DailyHeader />
 
       <main className="mx-auto max-w-3xl px-4 py-7">
-        <h1 className="font-display text-3xl tracking-tight sm:text-4xl">오늘의 브리핑</h1>
+        <h1 className="text-3xl font-extrabold tracking-tight sm:text-4xl">오늘의 브리핑</h1>
         <p className="mt-2 text-sm text-zinc-600 dark:text-zinc-400">
           그날의 AI·개발 소식을 한눈에. 매일 오전 8시 자동 업데이트.
         </p>

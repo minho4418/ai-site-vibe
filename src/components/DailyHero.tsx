@@ -30,7 +30,7 @@ export function DailyHero({ briefing }: { briefing: Briefing }) {
           )}
         </div>
 
-        <h2 className="font-display text-2xl leading-tight tracking-tight text-zinc-900 dark:text-zinc-100 sm:text-3xl">
+        <h2 className="text-[22px] font-extrabold leading-snug tracking-tight text-zinc-900 dark:text-zinc-100 sm:text-[26px]">
           {briefing.title ?? "오늘의 AI·개발 브리핑"}
         </h2>
 
