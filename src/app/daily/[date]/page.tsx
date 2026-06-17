@@ -5,6 +5,7 @@ import { notFound } from "next/navigation";
 import { BriefingView } from "@/components/BriefingView";
 import { DailyHeader } from "@/components/DailyHeader";
 import { getBriefing } from "@/lib/briefings";
+import { briefingJsonLd } from "@/lib/briefing-jsonld";
 import { formatBriefingDate } from "@/lib/format-briefing-date";
 
 type Params = { params: Promise<{ date: string }> };
@@ -42,6 +43,11 @@ export default async function DailyDatePage({ params }: Params) {
 
   return (
     <div className="min-h-dvh text-zinc-900 dark:text-zinc-100">
+      {/* GEO/구조화 데이터: 이 브리핑을 NewsArticle 로 기계가 읽게 한다(출처 citation 포함). */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(briefingJsonLd(briefing)) }}
+      />
       <DailyHeader />
 
       <main className="mx-auto max-w-3xl px-4 py-8">
