@@ -18,8 +18,22 @@ export type BriefingMeta = Pick<Briefing, "date" | "title" | "summary" | "sample
 
 export const BRIEFING_DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
 
+// 깨진 문자열의 강한 신호: 유니코드 대체문자(U+FFFD)·Specials 블록(U+FFF9–FFFF)·
+// 고립 서로게이트(U+D800–DFFF). 정상 콘텐츠엔 절대 나오지 않으므로 고정밀로 손상을 판별한다.
+// (루틴이 긴 한글 JSON 을 한 번에 생성하다 끝부분에서 바이트가 깨질 때 나타난다.)
+// 주의: '맊'(만)처럼 유효하지만 틀린 한글 오타는 여기서 못 거른다 — 그건 루틴 측에서만 고칠 수 있다.
+const CORRUPTION_RE = /[\uFFF9-\uFFFF\uD800-\uDFFF]/u;
+// 표시에 무의미하고 손상의 흔적인 제어문자(C0/C1)는 조용히 제거한다(\t·\n·\r 은 보존).
+const CONTROL_RE = /[\u0000-\u0008\u000B\u000C\u000E-\u001F\u007F-\u009F]/gu;
+
 function asString(v: unknown): string {
-  return typeof v === "string" ? v.trim() : "";
+  if (typeof v !== "string") return "";
+  return v.replace(CONTROL_RE, "").trim();
+}
+
+/** 대체문자 등 명백한 손상 마커가 있으면 true → 표시에서 제외(쓰레기 노출 방지). */
+function isCorrupted(s: string): boolean {
+  return CORRUPTION_RE.test(s);
 }
 
 // 제목 끝의 "— …데일리 브리핑" 류 보일러플레이트 접미사를 제거한다.
@@ -33,13 +47,15 @@ function parseItem(raw: unknown): BriefingItem | null {
   if (!raw || typeof raw !== "object") return null;
   const o = raw as Record<string, unknown>;
   const text = asString(o.text);
-  if (!text) return null;
+  // 본문이 비었거나 손상 마커가 섞인 항목은 버린다(깨진 한 줄이 화면에 노출되지 않게).
+  if (!text || isCorrupted(text)) return null;
   const item: BriefingItem = { text };
   const url = asString(o.url);
   // http(s) 절대경로 또는 사이트 내부 경로(/...)만 허용 — javascript: 등 위험 스킴 차단.
   if (/^https?:\/\//i.test(url) || url.startsWith("/")) item.url = url;
   const source = asString(o.source);
-  if (source) item.source = source;
+  // 출처도 손상됐으면 붙이지 않는다(본문은 멀쩡한데 꼬리표만 깨진 경우 대비).
+  if (source && !isCorrupted(source)) item.source = source;
   return item;
 }
 
@@ -64,14 +80,20 @@ export function parseBriefing(raw: unknown, fallbackDate?: string): Briefing | n
     const items = (Array.isArray(so.items) ? so.items : [])
       .map(parseItem)
       .filter((i): i is BriefingItem => i !== null);
-    if (heading && items.length > 0) sections.push({ heading, items });
+    // 손상된 제목의 섹션은 통째로 건너뛴다(항목이 멀쩡해도 헤딩이 깨지면 신뢰 불가).
+    if (heading && !isCorrupted(heading) && items.length > 0) {
+      sections.push({ heading, items });
+    }
   }
   if (sections.length === 0) return null;
 
+  const title = cleanTitle(asString(o.title));
+  const summary = asString(o.summary);
   return {
     date,
-    title: cleanTitle(asString(o.title)) || undefined,
-    summary: asString(o.summary) || undefined,
+    // 제목/요약이 손상됐으면 떨군다 → 뷰가 기본 제목으로 대체(깨진 헤드라인 노출 방지).
+    title: title && !isCorrupted(title) ? title : undefined,
+    summary: summary && !isCorrupted(summary) ? summary : undefined,
     sections,
     pick: parseItem(o.pick),
     sample: o.sample === true,
