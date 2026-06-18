@@ -60,7 +60,31 @@ async function postJson(url: string): Promise<{ ok: boolean; status: number; jso
   return { ok: res.ok, status: res.status, json };
 }
 
-// 글 1개 = 컨테이너 생성 → publish. replyToId 가 있으면 그 글에 이어 붙인다. 게시된 미디어 ID 반환.
+const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
+
+// 컨테이너 처리 상태(EXPIRED·ERROR·FINISHED·IN_PROGRESS·PUBLISHED). 생성 직후엔 IN_PROGRESS.
+async function getStatus(creationId: string, tok: string): Promise<string> {
+  const res = await fetch(`${GRAPH}/${creationId}?fields=status&access_token=${tok}`, {
+    signal: AbortSignal.timeout(15000),
+  });
+  const json = (await res.json().catch(() => ({}))) as Record<string, unknown>;
+  return typeof json.status === "string" ? json.status : "";
+}
+
+// 컨테이너가 publish 가능한 상태(FINISHED)가 될 때까지 폴링. 생성 직후 바로 publish 하면
+// Threads 가 "Media Not Found"(code 24)를 던지므로 반드시 대기해야 한다(Meta 권장).
+async function waitReady(creationId: string, tok: string): Promise<void> {
+  for (let i = 0; i < 15; i++) {
+    const status = await getStatus(creationId, tok);
+    if (status === "FINISHED") return;
+    if (status === "ERROR" || status === "EXPIRED") throw new Error(`container ${status}`);
+    await sleep(2000);
+  }
+  // FINISHED 를 못 봤어도 마지막으로 publish 를 시도해본다(상태 조회가 막혔을 수 있음).
+}
+
+// 글 1개 = 컨테이너 생성 → 준비될 때까지 대기 → publish. replyToId 가 있으면 그 글에 이어 붙인다.
+// 게시된 미디어 ID 반환.
 async function publishOne(userId: string, tok: string, text: string, replyToId?: string): Promise<string> {
   const reply = replyToId ? `&reply_to_id=${encodeURIComponent(replyToId)}` : "";
   const create = await postJson(
@@ -70,6 +94,9 @@ async function publishOne(userId: string, tok: string, text: string, replyToId?:
   if (!create.ok || typeof creationId !== "string") {
     throw new Error(`container create failed (${create.status}): ${JSON.stringify(create.json)}`);
   }
+
+  await waitReady(creationId, tok);
+
   const publish = await postJson(
     `${GRAPH}/${userId}/threads_publish?creation_id=${encodeURIComponent(creationId)}&access_token=${tok}`,
   );
