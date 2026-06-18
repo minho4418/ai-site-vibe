@@ -1,5 +1,6 @@
 import { parseBriefing } from "@/lib/briefing-types";
 import { getSupabaseServiceServer } from "@/lib/supabase-server";
+import { postBriefingToThreads, type ThreadsResult } from "@/lib/threads";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
@@ -50,10 +51,37 @@ export async function POST(request: Request) {
     return Response.json({ error: error.message }, { status: 500 });
   }
 
+  // 발행 성공 후 Threads 자동 게시. 토큰이 설정돼 있고 예시(sample)가 아닐 때만,
+  // 그리고 같은 날짜를 아직 안 올렸을 때만(멱등). 실패해도 발행 자체는 성공으로 둔다.
+  let threads: ThreadsResult = { skipped: true, reason: "disabled" };
+  if (process.env.THREADS_ACCESS_TOKEN && process.env.THREADS_USER_ID && !briefing.sample) {
+    try {
+      const { data: existing } = await supabase
+        .from("daily_briefings")
+        .select("threads_post_id")
+        .eq("date", briefing.date)
+        .maybeSingle();
+      if (existing?.threads_post_id) {
+        threads = { skipped: true, reason: "already posted" };
+      } else {
+        threads = await postBriefingToThreads(briefing);
+        if ("posted" in threads) {
+          await supabase
+            .from("daily_briefings")
+            .update({ threads_post_id: threads.id })
+            .eq("date", briefing.date);
+        }
+      }
+    } catch (e) {
+      threads = { error: (e as Error).message };
+    }
+  }
+
   return Response.json({
     ok: true,
     date: briefing.date,
     sections: briefing.sections.length,
     items: briefing.sections.reduce((n, s) => n + s.items.length, 0),
+    threads,
   });
 }

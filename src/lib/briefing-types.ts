@@ -2,7 +2,12 @@
 //  - 읽기 경로(briefings.ts, 서버)와 발행 엔드포인트(/api/briefing)가 함께 쓴다.
 //  - 클라이언트 컴포넌트(DailyHero 등)는 여기서 타입만 import.
 
-export type BriefingItem = { text: string; url?: string; source?: string };
+export type BriefingItem = {
+  text: string;
+  url?: string;
+  source?: string;
+  social?: string; // (선택) 소셜용 캐주얼 한 줄. 없으면 text 를 줄여서 사용.
+};
 export type BriefingSection = { heading: string; items: BriefingItem[] };
 export type Briefing = {
   date: string; // "YYYY-MM-DD"
@@ -11,6 +16,7 @@ export type Briefing = {
   sections: BriefingSection[];
   pick?: BriefingItem | null; // 오늘의 한 줄 추천
   sample?: boolean; // 시드/예시 브리핑이면 true → 화면에 '예시' 배지
+  socialHook?: string; // (선택) 쓰레드 체인 맨 위 훅 문구. 없으면 기본 훅 사용.
 };
 
 /** 아카이브 목록용 경량 메타(섹션 본문 제외). */
@@ -56,6 +62,8 @@ function parseItem(raw: unknown): BriefingItem | null {
   const source = asString(o.source);
   // 출처도 손상됐으면 붙이지 않는다(본문은 멀쩡한데 꼬리표만 깨진 경우 대비).
   if (source && !isCorrupted(source)) item.source = source;
+  const social = asString(o.social);
+  if (social && !isCorrupted(social)) item.social = social;
   return item;
 }
 
@@ -89,6 +97,7 @@ export function parseBriefing(raw: unknown, fallbackDate?: string): Briefing | n
 
   const title = cleanTitle(asString(o.title));
   const summary = asString(o.summary);
+  const socialHook = asString(o.socialHook);
   return {
     date,
     // 제목/요약이 손상됐으면 떨군다 → 뷰가 기본 제목으로 대체(깨진 헤드라인 노출 방지).
@@ -97,5 +106,6 @@ export function parseBriefing(raw: unknown, fallbackDate?: string): Briefing | n
     sections,
     pick: parseItem(o.pick),
     sample: o.sample === true,
+    socialHook: socialHook && !isCorrupted(socialHook) ? socialHook : undefined,
   };
 }
