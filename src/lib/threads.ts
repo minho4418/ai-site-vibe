@@ -5,13 +5,15 @@ import { SITE_URL } from "./site";
 
 // 오늘의 브리핑을 Threads(Meta) 에 "스레드 체인"으로 자동 게시한다(공식 Threads Graph API).
 //  - 환경변수 THREADS_ACCESS_TOKEN + THREADS_USER_ID 가 있을 때만 동작(없으면 skip).
-//  - 구조: ① 훅(맨 위, 링크 없음 → 도달 극대화) → ② 뉴스마다 1글씩 이어달기(reply_to_id),
-//          각 글은 "제목+요약 본문 + 해당 뉴스 링크" → ③ 마지막 글에 전체 브리핑 링크.
+//  - 구조(노출·유입 최적화): ① 훅(맨 위, 링크 없음 → 도달 극대화) → ② 뉴스마다 1글씩
+//          이어달기(reply_to_id), 각 글은 "짧은 요약 + 출처(텍스트, 외부링크 없음)" →
+//          ③ 마지막 글에만 자사 사이트 링크 1개 + 팔로우 CTA(외부 링크는 여기 한 곳뿐 → 도달 보존).
 //  - 각 글은 2단계(컨테이너 생성 → publish). 다음 글은 직전 글에 reply_to_id 로 이어 붙인다.
 //  - 토큰(60일)은 발급·갱신이 필요하며 GitHub Secret/Vercel env 에 보관한다.
 
 const GRAPH = "https://graph.threads.net/v1.0";
 const MAX_LEN = 500; // Threads 텍스트 글자 제한.
+const ITEM_MAX = 120; // 뉴스 글 본문 권장 길이 — 너무 길면 스크롤 이탈, 짧게 요약.
 const MAX_ITEMS = 8; // 체인이 너무 길지 않게 뉴스 항목 상한.
 
 const KEYCAPS = ["1️⃣", "2️⃣", "3️⃣", "4️⃣", "5️⃣", "6️⃣", "7️⃣", "8️⃣", "9️⃣", "🔟"];
@@ -23,6 +25,25 @@ function clamp(s: string): string {
   return s.length > MAX_LEN ? `${s.slice(0, MAX_LEN - 1).trimEnd()}…` : s;
 }
 
+// 뉴스 글 본문을 짧게: ITEM_MAX 근처에 문장 끝이 있으면 거기서 깔끔히 종료,
+// 없으면 단어 경계에서 끊고 …. (긴 부연·괄호 설명을 떨궈 스캔성을 높인다.)
+function trimBody(text: string): string {
+  const t = text.trim();
+  if (t.length <= ITEM_MAX) return t;
+  const slice = t.slice(0, ITEM_MAX);
+  const sentEnd = Math.max(
+    slice.lastIndexOf(". "),
+    slice.lastIndexOf("! "),
+    slice.lastIndexOf("? "),
+    slice.lastIndexOf("。"),
+  );
+  // 문장 끝이 상한 '가까이'에 있을 때만 거기서 종료(깔끔). 한참 앞이면 내용을 너무 버리므로
+  // 단어 경계 컷 + …(첫 문장만 남기고 싹둑 자르는 것 방지).
+  if (sentEnd >= ITEM_MAX - 25) return t.slice(0, sentEnd + 1).trim();
+  const sp = slice.lastIndexOf(" ");
+  return `${(sp > 0 ? slice.slice(0, sp) : slice).trimEnd()}…`;
+}
+
 // 맨 위 훅(링크 없음). 루틴이 socialHook 을 주면 그대로(가장 임팩트 있음). 없으면 그날
 // 헤드라인(title)을 앞세운 기본 훅으로 폴백 — 밋밋한 보일러플레이트보다 구체적 헤드라인이 강하다.
 function buildHook(b: Briefing): string {
@@ -32,19 +53,21 @@ function buildHook(b: Briefing): string {
   return clamp(`🧵 ${title}\n\n오늘 꼭 챙길 AI·개발 소식만 핵심 정리 (${Number(mm)}/${Number(dd)})`);
 }
 
-// 뉴스 1글: "제목+요약 본문" 뒤에 해당 뉴스 링크(없으면 출처 이름). 캐주얼 버전(social)이 있으면
-// 본문 대신 사용. 링크가 500자 제한에 잘리지 않도록 본문을 먼저 줄인 뒤 링크를 붙인다.
+// 뉴스 1글: 짧은 요약 본문 + 출처(텍스트). 의도적으로 외부 링크를 넣지 않는다 —
+// Threads 는 외부 링크가 있는 글의 도달을 크게 깎고, 원문 링크는 클릭을 출처(타사)로 보낸다.
+// 원문/전체는 마지막 글의 사이트 링크 한 곳으로 모은다(도달 보존 + 자사 유입 집중).
 function buildItem(item: BriefingItem, i: number): string {
   const head = `${numberLabel(i)} `;
-  const tail = item.url ? `\n${item.url}` : item.source ? `\n↳ ${item.source}` : "";
-  let body = item.social ? item.social : item.text;
-  const room = MAX_LEN - head.length - tail.length;
-  if (body.length > room) body = `${body.slice(0, room - 1).trimEnd()}…`;
-  return `${head}${body}${tail}`;
+  const tail = item.source ? `\n— ${item.source}` : "";
+  const body = trimBody(item.social ? item.social : item.text);
+  return clamp(`${head}${body}${tail}`);
 }
 
+// 마지막 글: 체인 전체에서 유일한 외부 링크 = 자사 사이트. 강한 CTA + 팔로우 유도(재방문).
 function buildLinkPost(b: Briefing): string {
-  return clamp(`더 자세한 건 여기 다 정리해둠 👇\n${SITE_URL}/daily/${b.date}`);
+  return clamp(
+    `📰 오늘 뉴스 전체 요약 + 원문 링크 모음은 여기 👇\n${SITE_URL}/daily/${b.date}\n\n매일 아침 8시 업데이트 — 팔로우하면 안 놓쳐요 🔔`,
+  );
 }
 
 export type ThreadsResult =
