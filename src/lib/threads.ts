@@ -44,13 +44,12 @@ function trimBody(text: string): string {
   return `${(sp > 0 ? slice.slice(0, sp) : slice).trimEnd()}…`;
 }
 
-// 맨 위 훅(링크 없음). 루틴이 socialHook 을 주면 그대로(가장 임팩트 있음). 없으면 그날
-// 헤드라인(title)을 앞세운 기본 훅으로 폴백 — 밋밋한 보일러플레이트보다 구체적 헤드라인이 강하다.
+// 맨 위 훅(링크 없음). 첫 줄은 socialHook(루틴 생성, 가장 임팩트 있음) 또는 그날 헤드라인,
+// 그 아래에 날짜를 포함한 표준 태그라인을 '항상' 붙인다(매일 시리즈 표시 + 날짜 일관).
 function buildHook(b: Briefing): string {
-  if (b.socialHook) return clamp(b.socialHook);
   const [, mm, dd] = b.date.split("-");
-  const title = b.title ?? "오늘의 AI·개발 브리핑";
-  return clamp(`🧵 ${title}\n\n오늘 꼭 챙길 AI·개발 소식만 핵심 정리 (${Number(mm)}/${Number(dd)})`);
+  const lead = b.socialHook ?? b.title ?? "오늘의 AI·개발 브리핑";
+  return clamp(`${lead}\n\n🗓 ${Number(mm)}/${Number(dd)} 오늘의 AI·개발 핵심 🧵`);
 }
 
 // 뉴스 1글: 짧은 요약 본문 + 출처(텍스트). 의도적으로 외부 링크를 넣지 않는다 —
