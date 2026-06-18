@@ -9,7 +9,10 @@
 -- ──────────────────────────────────────────────────────────────────────────
 create table if not exists public.articles (
   id            uuid primary key default gen_random_uuid(),
-  url           text not null unique,
+  -- url 은 유일성 제약을 두지 않는다. 누적 중복 제거는 title_key UNIQUE 가 전담한다
+  -- (migration 002/006 참고). url 에 UNIQUE 를 걸면 onConflict:"title_key" upsert 가
+  -- url 충돌 시 batch 전체를 롤백시켜 수집이 0건이 된다.
+  url           text not null,
   title         text not null,
   source        text not null,
   category      text not null,
