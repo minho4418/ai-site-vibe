@@ -192,12 +192,16 @@ export async function GET(request: Request) {
   //    DB 의 기존 1건을 갱신해 누적 중복을 원천 차단. (title_key UNIQUE 인덱스 필요 — migrations/002 참고.)
   //    articles.likes_count / ai_summary 는 rows 에 없으므로 기존 값이 유지된다.
   let totalUpserted = 0;
+  // upsert 실패는 "한 건도 저장 못 함"이라 치명적 → 아래에서 HTTP 500 으로 반환해
+  // 워크플로가 빨간불로 즉시 알린다. (개별 피드/요약 실패는 부분적이라 200 유지.)
+  let upsertFailed = false;
   if (deduped.length > 0) {
     const { error, count } = await supabase
       .from("articles")
       .upsert(deduped, { onConflict: "title_key", count: "exact" });
     if (error) {
       results.push({ source: "upsert", error: error.message });
+      upsertFailed = true;
     } else {
       totalUpserted = count ?? deduped.length;
     }
@@ -212,15 +216,20 @@ export async function GET(request: Request) {
     results.push({ source: "ai-summary", error: (err as Error).message });
   }
 
-  return Response.json({
-    ok: true,
-    ran_at: new Date().toISOString(),
-    feeds: FEEDS.length,
-    candidates: candidates.length,
-    deduped: deduped.length,
-    removed_dupes: candidates.length - deduped.length,
-    total_upserted: totalUpserted,
-    summarized,
-    results,
-  });
+  // 진단용 본문은 그대로 두되, upsert 가 실패했으면 status 500 으로 내려 워크플로의
+  // `test "${code}" = "200"` 검증이 실패하도록 한다. ok 도 false 로 맞춘다.
+  return Response.json(
+    {
+      ok: !upsertFailed,
+      ran_at: new Date().toISOString(),
+      feeds: FEEDS.length,
+      candidates: candidates.length,
+      deduped: deduped.length,
+      removed_dupes: candidates.length - deduped.length,
+      total_upserted: totalUpserted,
+      summarized,
+      results,
+    },
+    { status: upsertFailed ? 500 : 200 },
+  );
 }
