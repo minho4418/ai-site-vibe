@@ -1,0 +1,45 @@
+name: Ingest RSS
+
+# Vercel Hobby 플랜의 cron 은 best-effort 라 예정 시각에 조용히 스킵될 수 있고(재시도 없음),
+# 실제로 며칠씩 미갱신되는 사고가 있었다. 그래서 수집 트리거를 GitHub Actions cron 으로 옮긴다.
+# 러너가 매일 /api/cron/ingest 를 호출하면 Vercel 함수가 피드 수집·upsert 를 수행한다.
+# (피드 fetch 는 여전히 Vercel 서버에서 일어남 — 호출만 외부에서 확실하게 걸어주는 구조.)
+#
+# 필요한 설정: repo → Settings → Secrets and variables → Actions 에
+#   CRON_SECRET  (Vercel 환경변수 CRON_SECRET 과 동일한 값)
+# endpoint 의 인증과 onConflict:"title_key" upsert 가 멱등이라, Vercel cron 과 동시에 돌아도 안전하다.
+
+on:
+  schedule:
+    # 23:00 UTC = KST 오전 8시. Vercel cron(vercel.json)과 동일 시각.
+    # 주의: GitHub Actions schedule 은 부하 시 수 분~십수 분 지연될 수 있으나, 스킵돼도 이력에 남는다.
+    - cron: "0 23 * * *"
+  workflow_dispatch: {} # 대시보드에서 수동 실행용
+
+# 같은 시각 중복 실행이 겹쳐 쌓이지 않도록(이전 run 이 끝나기 전 새 run 시작 방지).
+concurrency:
+  group: ingest
+  cancel-in-progress: false
+
+jobs:
+  ingest:
+    name: Trigger /api/cron/ingest
+    runs-on: ubuntu-latest
+    steps:
+      - name: Call ingest endpoint
+        env:
+          CRON_SECRET: ${{ secrets.CRON_SECRET }}
+        run: |
+          set -euo pipefail
+          if [ -z "${CRON_SECRET:-}" ]; then
+            echo "::error::CRON_SECRET secret is not set in repo Actions secrets."
+            exit 1
+          fi
+          # maxDuration=60s 인 함수라 넉넉히 120s 까지 대기. 실패(5xx)면 워크플로도 실패 처리.
+          code=$(curl -sS --max-time 120 -o resp.json -w '%{http_code}' \
+            -H "Authorization: Bearer ${CRON_SECRET}" \
+            https://knewittoday.com/api/cron/ingest)
+          echo "HTTP ${code}"
+          cat resp.json || true
+          echo
+          test "${code}" = "200"
