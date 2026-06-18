@@ -5,8 +5,8 @@ import { SITE_URL } from "./site";
 
 // 오늘의 브리핑을 Threads(Meta) 에 "스레드 체인"으로 자동 게시한다(공식 Threads Graph API).
 //  - 환경변수 THREADS_ACCESS_TOKEN + THREADS_USER_ID 가 있을 때만 동작(없으면 skip).
-//  - 구조: ① 훅(맨 위, 링크 없음 → 도달 극대화) → ② 뉴스마다 1글씩 이어달기(reply_to_id)
-//          → ③ 마지막 글에만 전체 브리핑 링크(본문 글들의 도달이 링크로 깎이지 않게).
+//  - 구조: ① 훅(맨 위, 링크 없음 → 도달 극대화) → ② 뉴스마다 1글씩 이어달기(reply_to_id),
+//          각 글은 "제목+요약 본문 + 해당 뉴스 링크" → ③ 마지막 글에 전체 브리핑 링크.
 //  - 각 글은 2단계(컨테이너 생성 → publish). 다음 글은 직전 글에 reply_to_id 로 이어 붙인다.
 //  - 토큰(60일)은 발급·갱신이 필요하며 GitHub Secret/Vercel env 에 보관한다.
 
@@ -17,14 +17,6 @@ const MAX_ITEMS = 8; // 체인이 너무 길지 않게 뉴스 항목 상한.
 const KEYCAPS = ["1️⃣", "2️⃣", "3️⃣", "4️⃣", "5️⃣", "6️⃣", "7️⃣", "8️⃣", "9️⃣", "🔟"];
 function numberLabel(i: number): string {
   return KEYCAPS[i] ?? `${i + 1}.`;
-}
-
-// 항목 텍스트를 짧게: 첫 문장이 적당하면 그걸, 아니면 잘라서 ….
-function shorten(text: string, max = 300): string {
-  const m = text.match(/^(.+?[.!?。])\s/u);
-  let s = m && m[1].length >= 10 && m[1].length <= max ? m[1] : text;
-  if (s.length > max) s = `${s.slice(0, max - 1).trimEnd()}…`;
-  return s.trim();
 }
 
 function clamp(s: string): string {
@@ -39,10 +31,15 @@ function buildHook(b: Briefing): string {
   return clamp(`${Number(mm)}/${Number(dd)} 오늘 AI 뉴스 중 이건 챙겨가자 🧵\n${title}`);
 }
 
-// 뉴스 1글. 항목에 캐주얼 버전(social)이 있으면 그걸, 없으면 본문을 줄여서 사용.
+// 뉴스 1글: "제목+요약 본문" 뒤에 해당 뉴스 링크(없으면 출처 이름). 캐주얼 버전(social)이 있으면
+// 본문 대신 사용. 링크가 500자 제한에 잘리지 않도록 본문을 먼저 줄인 뒤 링크를 붙인다.
 function buildItem(item: BriefingItem, i: number): string {
-  const body = `${numberLabel(i)} ${item.social ? item.social : shorten(item.text)}`;
-  return clamp(item.source ? `${body}\n↳ ${item.source}` : body);
+  const head = `${numberLabel(i)} `;
+  const tail = item.url ? `\n${item.url}` : item.source ? `\n↳ ${item.source}` : "";
+  let body = item.social ? item.social : item.text;
+  const room = MAX_LEN - head.length - tail.length;
+  if (body.length > room) body = `${body.slice(0, room - 1).trimEnd()}…`;
+  return `${head}${body}${tail}`;
 }
 
 function buildLinkPost(b: Briefing): string {
