@@ -14,7 +14,7 @@ import { SITE_URL } from "./site";
 const GRAPH = "https://graph.threads.net/v1.0";
 const MAX_LEN = 500; // Threads 텍스트 글자 제한.
 const ITEM_MAX = 120; // 뉴스 글 본문 권장 길이 — 너무 길면 스크롤 이탈, 짧게 요약.
-const MAX_ITEMS = 8; // 체인이 너무 길지 않게 뉴스 항목 상한.
+const MAX_ITEMS = 5; // 체인이 너무 길지 않게 뉴스 항목 상한.
 
 const KEYCAPS = ["1️⃣", "2️⃣", "3️⃣", "4️⃣", "5️⃣", "6️⃣", "7️⃣", "8️⃣", "9️⃣", "🔟"];
 function numberLabel(i: number): string {
