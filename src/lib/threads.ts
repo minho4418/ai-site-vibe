@@ -49,7 +49,8 @@ function trimBody(text: string): string {
 function buildHook(b: Briefing): string {
   const [, mm, dd] = b.date.split("-");
   const lead = b.socialHook ?? b.title ?? "오늘의 AI·개발 브리핑";
-  return clamp(`${lead}\n\n🗓 ${Number(mm)}/${Number(dd)} 오늘의 AI·개발 핵심 🧵`);
+  // 날짜 + 검색 키워드("AI 뉴스") + 토픽 태그 → Threads 검색·탐색 노출.
+  return clamp(`${lead}\n\n🗓 ${Number(mm)}/${Number(dd)} 오늘의 AI 뉴스 한눈에 🧵\n#AI #생성형AI #개발자`);
 }
 
 // 뉴스 1글: 짧은 요약 본문 + 출처(텍스트). 의도적으로 외부 링크를 넣지 않는다 —
