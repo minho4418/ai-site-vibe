@@ -4,6 +4,9 @@ import { postBriefingToThreads, type ThreadsResult } from "@/lib/threads";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
+// Threads 체인 게시는 글마다 컨테이너 처리(status 폴링)를 기다리므로 동기 처리가 길어진다
+// (최대 ~10글). 기본 서버리스 제한에 걸리지 않도록 늘린다(플랜 한도 내로 클램프됨).
+export const maxDuration = 300;
 
 // 오늘의 브리핑 발행 엔드포인트. 클라우드 "데일리 브리핑" 루틴이 리서치 결과(JSON)를
 // 여기로 POST 하면 서비스 롤로 daily_briefings 에 upsert 한다.
