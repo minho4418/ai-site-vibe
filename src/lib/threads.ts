@@ -23,12 +23,13 @@ function clamp(s: string): string {
   return s.length > MAX_LEN ? `${s.slice(0, MAX_LEN - 1).trimEnd()}…` : s;
 }
 
-// 맨 위 훅(링크 없음). 루틴이 socialHook 을 주면 그대로, 없으면 캐주얼 기본 훅.
+// 맨 위 훅(링크 없음). 루틴이 socialHook 을 주면 그대로(가장 임팩트 있음). 없으면 그날
+// 헤드라인(title)을 앞세운 기본 훅으로 폴백 — 밋밋한 보일러플레이트보다 구체적 헤드라인이 강하다.
 function buildHook(b: Briefing): string {
   if (b.socialHook) return clamp(b.socialHook);
   const [, mm, dd] = b.date.split("-");
   const title = b.title ?? "오늘의 AI·개발 브리핑";
-  return clamp(`${Number(mm)}/${Number(dd)} 오늘 AI 뉴스 중 이건 챙겨가자 🧵\n${title}`);
+  return clamp(`🧵 ${title}\n\n오늘 꼭 챙길 AI·개발 소식만 핵심 정리 (${Number(mm)}/${Number(dd)})`);
 }
 
 // 뉴스 1글: "제목+요약 본문" 뒤에 해당 뉴스 링크(없으면 출처 이름). 캐주얼 버전(social)이 있으면
