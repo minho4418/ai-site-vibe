@@ -1,10 +1,8 @@
 "use client";
 
-import { CATEGORIES } from "./categories";
+import { normalizeCategory } from "./categories";
 import { getSupabaseBrowser } from "./supabase-browser";
 import type { Article } from "./types";
-
-const CATEGORY_SET = new Set<string>(CATEGORIES.filter((c) => c.id !== "all").map((c) => c.id));
 
 // 같은 기사를 한 세션에서 여러 번 눌러도 조회수는 1회만 올린다(자기 자신 인플레이션 방지).
 const viewedThisSession = new Set<string>();
@@ -23,11 +21,6 @@ export function recordView(articleId: string): void {
   supabase.rpc("increment_views", { p_article_id: articleId }).then(({ error }) => {
     if (error) console.error("[views] increment_views failed:", error.message);
   });
-}
-
-// 서버 articles.ts 의 normalizeCategory 와 동일 규칙(구 카테고리는 LLM 로 폴백).
-function normalizeCategory(raw: string): Article["category"] {
-  return (CATEGORY_SET.has(raw) ? raw : "LLM") as Article["category"];
 }
 
 /**

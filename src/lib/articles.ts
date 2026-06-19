@@ -1,12 +1,9 @@
 import "server-only";
 
-import { CATEGORIES } from "./categories";
+import { normalizeCategory } from "./categories";
 import { MOCK_ARTICLES } from "./mock-articles";
 import { getSupabaseAnonServer } from "./supabase-server";
 import type { Article } from "./types";
-
-const CATEGORY_SET = new Set<string>(CATEGORIES.filter((c) => c.id !== "all").map((c) => c.id));
-const FALLBACK_CATEGORY: Article["category"] = "LLM";
 
 // 홈에 표출할 기사 수.
 const FEED_SIZE = 80;
@@ -56,10 +53,6 @@ type ArticleRow = {
   likes_count: number | null;
   views_count?: number | null;
 };
-
-function normalizeCategory(raw: string): Article["category"] {
-  return (CATEGORY_SET.has(raw) ? raw : FALLBACK_CATEGORY) as Article["category"];
-}
 
 const BASE_COLS = "id, title, url, source, category, summary, thumbnail_url, published_at, likes_count";
 

@@ -4,7 +4,7 @@ import { useState } from "react";
 
 import { ArticleDetailModal } from "@/components/ArticleDetailModal";
 import { recordView } from "@/lib/articles-client";
-import { CATEGORY_COLORS, CATEGORY_LABELS } from "@/lib/categories";
+import { CATEGORY_COLORS, CATEGORY_HUE, CATEGORY_LABELS } from "@/lib/categories";
 import { isFresh, timeAgo } from "@/lib/time";
 import type { Article } from "@/lib/types";
 
@@ -33,18 +33,6 @@ function canFetchBody(pageUrl: string): boolean {
     return false;
   }
 }
-
-// 썸네일이 없을 때 그릴 커버의 카테고리별 기준 색조(HSL hue).
-const CATEGORY_HUE: Record<Article["category"], number> = {
-  Tools: 265,
-  LLM: 205,
-  OpenSource: 300,
-  Research: 188,
-  Practice: 158,
-  Infra: 25,
-  Startup: 345,
-  Contest: 95,
-};
 
 function hashString(s: string): number {
   let h = 0;

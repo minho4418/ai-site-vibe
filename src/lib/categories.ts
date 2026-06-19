@@ -44,3 +44,29 @@ export const CATEGORY_COLORS: Record<Exclude<CategoryId, "all">, string> = {
   Startup: "text-rose-700 ring-rose-500/40 dark:text-rose-300",
   Contest: "text-lime-700 ring-lime-500/40 dark:text-lime-300",
 };
+
+// 썸네일 없는 카드 커버의 카테고리별 기준 색조(HSL hue). 위 색상 맵(칩/링)과 같은 모듈에 모아,
+// 카테고리를 추가할 때 색을 한 파일에서 전부 채우게 한다(분산돼 한 곳을 빠뜨리는 사고 방지).
+export const CATEGORY_HUE: Record<Exclude<CategoryId, "all">, number> = {
+  Tools: 265,
+  LLM: 205,
+  OpenSource: 300,
+  Research: 188,
+  Practice: 158,
+  Infra: 25,
+  Startup: 345,
+  Contest: 95,
+};
+
+// 구(舊) 카테고리·오타 등 알 수 없는 category 값이 들어오면 이 값으로 폴백.
+export const FALLBACK_CATEGORY: Exclude<CategoryId, "all"> = "LLM";
+
+const CONCRETE_CATEGORY_IDS = new Set<string>(
+  CATEGORIES.filter((c) => c.id !== "all").map((c) => c.id),
+);
+
+// DB 의 category 문자열을 알려진 카테고리로 정규화한다(서버 articles.ts·클라 articles-client.ts 공용).
+// 알 수 없으면 FALLBACK_CATEGORY 로 — 한 곳에 둬서 서버/클라 규칙이 어긋나지 않게 한다.
+export function normalizeCategory(raw: string): Exclude<CategoryId, "all"> {
+  return (CONCRETE_CATEGORY_IDS.has(raw) ? raw : FALLBACK_CATEGORY) as Exclude<CategoryId, "all">;
+}
