@@ -2,6 +2,7 @@ name: CI
 
 # PR마다, 그리고 main 푸시마다 빌드를 자동 검증한다.
 # build = `next build` 라서 TypeScript 타입체크도 함께 수행된다(필수 게이트).
+# test = `vitest run` (순수 함수 단위 테스트). build 전에 돌려 빠른 피드백을 준다.
 # lint 는 아직 기존 코드에 미해결 에러가 있어 비차단(정보성)으로 둔다.
 # 그 에러들을 정리하면 lint 잡의 continue-on-error 를 제거해 필수 게이트로 승격하면 된다.
 
@@ -26,6 +27,7 @@ jobs:
           node-version: 20
           cache: npm
       - run: npm ci
+      - run: npm test
       - run: npm run build
 
   lint:
