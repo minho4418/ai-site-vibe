@@ -1,5 +1,6 @@
 import { generateDetailSummary, groqConfigured } from "@/lib/ai-summary";
 import { fetchArticleBody } from "@/lib/article-body";
+import type { Json } from "@/lib/database.types";
 import { getSupabaseServiceServer } from "@/lib/supabase-server";
 
 export const dynamic = "force-dynamic";
@@ -57,8 +58,11 @@ export async function GET(request: Request) {
     return Response.json({ status: "unavailable", reason: "gen_failed" });
   }
 
-  // 캐시 저장(실패해도 응답엔 영향 없음).
-  await supabase.from("articles").update({ detail_summary: summary }).eq("id", id);
+  // 캐시 저장(실패해도 응답엔 영향 없음). detail_summary 는 jsonb 컬럼(Json) 이라 직렬화 가능한 객체로 캐스팅.
+  await supabase
+    .from("articles")
+    .update({ detail_summary: summary as unknown as Json })
+    .eq("id", id);
 
   return Response.json({ status: "ok", summary, cached: false });
 }

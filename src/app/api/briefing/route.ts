@@ -1,4 +1,5 @@
 import { parseBriefing } from "@/lib/briefing-types";
+import type { Json } from "@/lib/database.types";
 import { getSupabaseServiceServer } from "@/lib/supabase-server";
 import { postBriefingToThreads, type ThreadsResult } from "@/lib/threads";
 
@@ -47,7 +48,8 @@ export async function POST(request: Request) {
   const { error } = await supabase
     .from("daily_briefings")
     .upsert(
-      { date: briefing.date, payload: briefing, updated_at: new Date().toISOString() },
+      // payload 는 jsonb(Json) 컬럼 — 검증된 Briefing 객체를 직렬화 가능한 값으로 캐스팅해 저장.
+      { date: briefing.date, payload: briefing as unknown as Json, updated_at: new Date().toISOString() },
       { onConflict: "date" },
     );
   if (error) {

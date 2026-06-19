@@ -10,8 +10,6 @@ import { parseBriefing, type Briefing, type BriefingMeta } from "./briefing-type
 
 export type { Briefing, BriefingItem, BriefingSection, BriefingMeta } from "./briefing-types";
 
-type Row = { date: string; payload: unknown };
-
 /** 가장 최근의 유효한 브리핑. 없거나 미설정이면 null. */
 export async function getLatestBriefing(): Promise<Briefing | null> {
   const supabase = getSupabaseAnonServer();
@@ -23,8 +21,7 @@ export async function getLatestBriefing(): Promise<Briefing | null> {
     .limit(1)
     .maybeSingle();
   if (error || !data) return null;
-  const row = data as Row;
-  return parseBriefing(row.payload, row.date);
+  return parseBriefing(data.payload, data.date);
 }
 
 export async function getBriefing(date: string): Promise<Briefing | null> {
@@ -36,8 +33,7 @@ export async function getBriefing(date: string): Promise<Briefing | null> {
     .eq("date", date)
     .maybeSingle();
   if (error || !data) return null;
-  const row = data as Row;
-  return parseBriefing(row.payload, row.date);
+  return parseBriefing(data.payload, data.date);
 }
 
 /** 아카이브 목록(최신순, 본문 제외). 깨진 행은 자동 제외. */
@@ -50,7 +46,7 @@ export async function listBriefings(limit = 90): Promise<BriefingMeta[]> {
     .order("date", { ascending: false })
     .limit(limit);
   if (error || !data) return [];
-  return (data as Row[])
+  return data
     .map((row) => parseBriefing(row.payload, row.date))
     .filter((b): b is Briefing => b !== null)
     .map(({ date, title, summary, sample }) => ({ date, title, summary, sample }));
