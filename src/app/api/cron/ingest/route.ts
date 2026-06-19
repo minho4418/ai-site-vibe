@@ -189,7 +189,7 @@ export async function GET(request: Request) {
   await enrichThumbnails(deduped, ogBudget);
 
   // 4) 단일 upsert. onConflict:"title_key" → 같은 제목이면 url 이 달라도(직링크↔구글뉴스, 매체간 와이어 카피)
-  //    DB 의 기존 1건을 갱신해 누적 중복을 원천 차단. (title_key UNIQUE 인덱스 필요 — migrations/002 참고.)
+  //    DB 의 기존 1건을 갱신해 누적 중복을 원천 차단. (title_key UNIQUE 인덱스 필요 — supabase/migrations/0001_init.sql 참고.)
   //    articles.likes_count / ai_summary 는 rows 에 없으므로 기존 값이 유지된다.
   let totalUpserted = 0;
   // upsert 실패는 "한 건도 저장 못 함"이라 치명적 → 아래에서 HTTP 500 으로 반환해
