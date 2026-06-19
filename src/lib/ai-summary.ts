@@ -2,6 +2,8 @@ import "server-only";
 
 import type { SupabaseClient } from "@supabase/supabase-js";
 
+import { runPool } from "./pool";
+
 // 무료 LLM(Groq, OpenAI 호환 API)으로 RSS 제목+요약을 한국어 한두 문장으로 다듬는다.
 // - 영문 기사(OpenAI/TechCrunch/Verge/HN)는 자연스러운 한국어로 번역 요약 → 타겟(한국 개발자)에 핵심 가치.
 // - 본문 fetch 없이 이미 수집한 RSS 텍스트만 입력 → 빠르고 안정적, Google News 리다이렉트 기사도 커버.
@@ -26,51 +28,70 @@ export function groqConfigured(): boolean {
 
 type SummaryInput = { title: string; summary: string | null };
 
-/** Groq 로 기사 1건을 한국어 요약. 실패(키 없음·네트워크·rate limit)하면 null → 호출부에서 건너뛴다. */
-export async function summarizeArticle(
-  input: SummaryInput,
-  timeoutMs = 12_000,
-): Promise<string | null> {
+// Groq(OpenAI 호환) 채팅 호출의 공통 골격: API 키 확인 → timeout 붙은 fetch → 응답 본문 텍스트 추출.
+// 세 요약 함수가 같은 보일러플레이트(AbortController·헤더·choices 파싱)를 반복하던 걸 한곳으로 모은다.
+// 실패(키 없음·네트워크·timeout·!ok·빈 응답)는 전부 null → 호출부는 그대로 폴백 처리한다.
+type GroqCall = {
+  model: string;
+  maxTokens: number;
+  system: string;
+  user: string;
+  timeoutMs: number;
+  jsonMode?: boolean; // true 면 response_format: json_object (JSON 강제)
+  temperature?: number;
+};
+
+async function callGroq(opts: GroqCall): Promise<string | null> {
   const apiKey = process.env.GROQ_API_KEY;
   if (!apiKey) return null;
 
-  const source = `${input.title}\n\n${input.summary ?? ""}`.trim();
-  if (source.length < 12) return null; // 입력이 너무 빈약하면 요약 의미 없음 → RSS 요약 폴백
-
   const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), timeoutMs);
+  const timer = setTimeout(() => controller.abort(), opts.timeoutMs);
   try {
     const res = await fetch(GROQ_ENDPOINT, {
       method: "POST",
       signal: controller.signal,
-      headers: {
-        Authorization: `Bearer ${apiKey}`,
-        "Content-Type": "application/json",
-      },
+      headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
       body: JSON.stringify({
-        model: process.env.GROQ_MODEL || DEFAULT_MODEL,
-        temperature: 0.3,
-        max_tokens: 160,
+        model: opts.model,
+        temperature: opts.temperature ?? 0.3,
+        max_tokens: opts.maxTokens,
+        ...(opts.jsonMode ? { response_format: { type: "json_object" } } : {}),
         messages: [
-          { role: "system", content: SYSTEM_PROMPT },
-          { role: "user", content: `제목: ${input.title}\n\n원문 발췌:\n${input.summary ?? "(없음)"}` },
+          { role: "system", content: opts.system },
+          { role: "user", content: opts.user },
         ],
       }),
     });
     if (!res.ok) return null;
-    const data = (await res.json()) as {
-      choices?: { message?: { content?: string } }[];
-    };
-    const text = data.choices?.[0]?.message?.content?.trim();
-    if (!text) return null;
-    // 모델이 가끔 감싸는 따옴표/머리말 제거 후 길이 컷.
-    const cleaned = text.replace(/^["'“”]+|["'“”]+$/g, "").trim();
-    return cleaned.length > 140 ? cleaned.slice(0, 139).trimEnd() + "…" : cleaned;
+    const data = (await res.json()) as { choices?: { message?: { content?: string } }[] };
+    return data.choices?.[0]?.message?.content?.trim() ?? null;
   } catch {
     return null;
   } finally {
     clearTimeout(timer);
   }
+}
+
+/** Groq 로 기사 1건을 한국어 요약. 실패(키 없음·네트워크·rate limit)하면 null → 호출부에서 건너뛴다. */
+export async function summarizeArticle(
+  input: SummaryInput,
+  timeoutMs = 12_000,
+): Promise<string | null> {
+  const source = `${input.title}\n\n${input.summary ?? ""}`.trim();
+  if (source.length < 12) return null; // 입력이 너무 빈약하면 요약 의미 없음 → RSS 요약 폴백
+
+  const text = await callGroq({
+    model: process.env.GROQ_MODEL || DEFAULT_MODEL,
+    maxTokens: 160,
+    timeoutMs,
+    system: SYSTEM_PROMPT,
+    user: `제목: ${input.title}\n\n원문 발췌:\n${input.summary ?? "(없음)"}`,
+  });
+  if (!text) return null;
+  // 모델이 가끔 감싸는 따옴표/머리말 제거 후 길이 컷.
+  const cleaned = text.replace(/^["'“”]+|["'“”]+$/g, "").trim();
+  return cleaned.length > 140 ? cleaned.slice(0, 139).trimEnd() + "…" : cleaned;
 }
 
 // ── 카드용 요약 + 커버 키워드(한 번의 Groq 호출로 둘 다) ──
@@ -94,35 +115,20 @@ export async function summarizeForCard(
   input: SummaryInput,
   timeoutMs = 12_000,
 ): Promise<CardSummary | null> {
-  const apiKey = process.env.GROQ_API_KEY;
-  if (!apiKey) return null;
-
   const source = `${input.title}\n\n${input.summary ?? ""}`.trim();
   if (source.length < 12) return null;
 
-  const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), timeoutMs);
-  try {
-    const res = await fetch(GROQ_ENDPOINT, {
-      method: "POST",
-      signal: controller.signal,
-      headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
-      body: JSON.stringify({
-        model: process.env.GROQ_MODEL || DEFAULT_MODEL,
-        temperature: 0.3,
-        max_tokens: 280,
-        response_format: { type: "json_object" },
-        messages: [
-          { role: "system", content: CARD_SYSTEM_PROMPT },
-          { role: "user", content: `제목: ${input.title}\n\n원문 발췌:\n${input.summary ?? "(없음)"}` },
-        ],
-      }),
-    });
-    if (!res.ok) return null;
-    const data = (await res.json()) as { choices?: { message?: { content?: string } }[] };
-    const raw = data.choices?.[0]?.message?.content?.trim();
-    if (!raw) return null;
+  const raw = await callGroq({
+    model: process.env.GROQ_MODEL || DEFAULT_MODEL,
+    maxTokens: 280,
+    timeoutMs,
+    jsonMode: true,
+    system: CARD_SYSTEM_PROMPT,
+    user: `제목: ${input.title}\n\n원문 발췌:\n${input.summary ?? "(없음)"}`,
+  });
+  if (!raw) return null;
 
+  try {
     const parsed = JSON.parse(raw) as { summary?: unknown; keywords?: unknown };
     let summary = typeof parsed.summary === "string" ? parsed.summary.replace(/^["'“”]+|["'“”]+$/g, "").trim() : "";
     if (summary.length > 140) summary = summary.slice(0, 139).trimEnd() + "…";
@@ -137,8 +143,6 @@ export async function summarizeForCard(
     return { summary, keywords };
   } catch {
     return null;
-  } finally {
-    clearTimeout(timer);
   }
 }
 
@@ -164,35 +168,21 @@ export async function generateDetailSummary(
   body: string,
   timeoutMs = 18_000,
 ): Promise<DetailSummary | null> {
-  const apiKey = process.env.GROQ_API_KEY;
-  if (!apiKey || body.trim().length < 200) return null;
+  if (body.trim().length < 200) return null;
 
-  const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), timeoutMs);
+  const raw = await callGroq({
+    // 상세 요약은 본문 전체(~2.5k 토큰/건)를 넣어 온디맨드로 자주 호출되므로,
+    // 일일 토큰 한도가 넉넉한 8b-instant 를 기본으로 쓴다(카드 요약 cron 의 70b 와 분리).
+    model: process.env.GROQ_DETAIL_MODEL || "llama-3.1-8b-instant",
+    maxTokens: 900,
+    timeoutMs,
+    jsonMode: true, // JSON 모드 — 파싱 실패를 줄인다.
+    system: DETAIL_SYSTEM_PROMPT,
+    user: `제목: ${title}\n\n본문:\n${body}`,
+  });
+  if (!raw) return null;
+
   try {
-    const res = await fetch(GROQ_ENDPOINT, {
-      method: "POST",
-      signal: controller.signal,
-      headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
-      body: JSON.stringify({
-        // 상세 요약은 본문 전체(~2.5k 토큰/건)를 넣어 온디맨드로 자주 호출되므로,
-        // 일일 토큰 한도가 넉넉한 8b-instant 를 기본으로 쓴다(카드 요약 cron 의 70b 와 분리).
-        model: process.env.GROQ_DETAIL_MODEL || "llama-3.1-8b-instant",
-        temperature: 0.3,
-        max_tokens: 900,
-        // Groq(OpenAI 호환)의 JSON 모드 — 파싱 실패를 줄인다.
-        response_format: { type: "json_object" },
-        messages: [
-          { role: "system", content: DETAIL_SYSTEM_PROMPT },
-          { role: "user", content: `제목: ${title}\n\n본문:\n${body}` },
-        ],
-      }),
-    });
-    if (!res.ok) return null;
-    const data = (await res.json()) as { choices?: { message?: { content?: string } }[] };
-    const raw = data.choices?.[0]?.message?.content?.trim();
-    if (!raw) return null;
-
     const parsed = JSON.parse(raw) as { tldr?: unknown; points?: unknown };
     const tldr = typeof parsed.tldr === "string" ? parsed.tldr.trim() : "";
     const points = Array.isArray(parsed.points)
@@ -202,8 +192,6 @@ export async function generateDetailSummary(
     return { tldr, points: points.slice(0, 6) };
   } catch {
     return null;
-  } finally {
-    clearTimeout(timer);
   }
 }
 
@@ -236,22 +224,16 @@ export async function enrichSummaries(
   if (error || !data || data.length === 0) return 0;
 
   const targets = data as ArticleRow[];
-  let cursor = 0;
   let done = 0;
 
-  async function worker() {
-    while (cursor < targets.length) {
-      const row = targets[cursor++];
-      const result = await summarizeForCard({ title: row.title, summary: row.summary });
-      if (!result) continue;
-      const { error: upErr } = await supabase
-        .from("articles")
-        .update({ ai_summary: result.summary, keywords: result.keywords })
-        .eq("id", row.id);
-      if (!upErr) done++;
-    }
-  }
-
-  await Promise.all(Array.from({ length: Math.min(concurrency, targets.length) }, worker));
+  await runPool(targets, concurrency, async (row) => {
+    const result = await summarizeForCard({ title: row.title, summary: row.summary });
+    if (!result) return;
+    const { error: upErr } = await supabase
+      .from("articles")
+      .update({ ai_summary: result.summary, keywords: result.keywords })
+      .eq("id", row.id);
+    if (!upErr) done++;
+  });
   return done;
 }

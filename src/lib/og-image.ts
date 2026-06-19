@@ -1,5 +1,7 @@
 import "server-only";
 
+import { runPool } from "./pool";
+
 // 기사 페이지 <head> 의 og:image(없으면 twitter:image) 를 뽑아 대표 이미지로 쓴다.
 // RSS 가 이미지를 안 줄 때(특히 한국 매체)의 보강용.
 const OG_PATTERNS = [
@@ -63,14 +65,9 @@ export async function enrichThumbnails(
   concurrency = 10,
 ): Promise<number> {
   const targets = rows.filter((r) => !r.thumbnail_url && isResolvableForOg(r.url)).slice(0, budget);
-  let cursor = 0;
-  async function worker() {
-    while (cursor < targets.length) {
-      const row = targets[cursor++];
-      const og = await fetchOgImage(row.url);
-      if (og) row.thumbnail_url = og;
-    }
-  }
-  await Promise.all(Array.from({ length: Math.min(concurrency, targets.length) }, worker));
+  await runPool(targets, concurrency, async (row) => {
+    const og = await fetchOgImage(row.url);
+    if (og) row.thumbnail_url = og;
+  });
   return budget - targets.length;
 }
