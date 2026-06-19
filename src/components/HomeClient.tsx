@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useDeferredValue, useEffect, useMemo, useState } from "react";
 
 import { ArticleCard } from "@/components/ArticleCard";
+import { BrandLogo } from "@/components/BrandLogo";
 import { CategoryFilter } from "@/components/CategoryFilter";
 import { DailyHero } from "@/components/DailyHero";
 import { KeywordRail } from "@/components/KeywordRail";
@@ -149,20 +150,7 @@ export function HomeClient({ articles, usingMock, briefing }: Props) {
     <div className="min-h-dvh text-zinc-900 dark:text-zinc-100">
       <header className="sticky top-0 z-30 border-b border-zinc-900/10 bg-[#FBF6EC]/80 backdrop-blur-md dark:border-white/10 dark:bg-[#0d0b14]/80">
         <div className="mx-auto flex max-w-6xl select-none flex-col gap-3 px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
-          <button
-            type="button"
-            onClick={resetToInitial}
-            aria-label="처음 화면으로 (필터·검색 초기화)"
-            className="flex w-fit cursor-pointer items-center gap-2.5 rounded-xl transition-opacity hover:opacity-80 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-violet-500 active:scale-[0.98]"
-          >
-            <div className="grain relative flex h-9 w-9 items-center justify-center overflow-hidden rounded-xl bg-gradient-to-br from-fuchsia-500 via-purple-500 to-orange-400 text-white shadow-[0_4px_14px_-4px_rgba(168,85,247,0.6)]">
-              {/* Knewit 'K' 모노그램 (파비콘 src/app/icon.svg 와 동일 형태) */}
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round" className="relative h-5 w-5">
-                <path d="M8 5v14M8 12l8-7M8 12l8 7" />
-              </svg>
-            </div>
-            <span className="font-display text-xl tracking-tight">Knewit</span>
-          </button>
+          <BrandLogo onClick={resetToInitial} ariaLabel="처음 화면으로 (필터·검색 초기화)" />
           <div className="flex items-center gap-2">
             <SearchInput value={query} onChange={setQuery} />
             <Link
