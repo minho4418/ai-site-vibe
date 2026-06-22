@@ -89,7 +89,7 @@ export const FEEDS: FeedSource[] = [
     limit: 10,
   },
   { url: "https://techcrunch.com/category/artificial-intelligence/feed/", source: "TechCrunch", category: "LLM" },
-  { url: "https://www.theverge.com/rss/ai-artificial-intelligence/index.xml", source: "The Verge", category: "LLM" },
+  // The Verge 제거: CDN/WAF 가 모든 자동화 UA(봇·브라우저 UA 무관)를 403으로 차단 — Vercel 서버 IP 차단으로 실제 수집 불가.
   // Hacker News (AI/코딩툴 키워드, 점수 20+ 만)
   {
     url: "https://hnrss.org/newest?q=AI+OR+LLM+OR+GPT+OR+Claude+OR+Cursor+OR+Copilot&points=20",
@@ -100,7 +100,8 @@ export const FEEDS: FeedSource[] = [
 
   // ── 해외 AI 전문 매체·연구 블로그 (직링크 → 본문/og:image 양호) ──────────
   // AI 전용 피드라 aiOnly 불필요. 카테고리는 classifyCategory 가 제목으로 재분류, 아래는 fallback.
-  { url: "https://blog.google/technology/ai/rss/", source: "Google AI", category: "Research", limit: 6 },
+  // 구 URL(blog.google/technology/ai/rss/)은 영구 301로 아래 URL로 이전됨(2026-06 확인).
+  { url: "https://blog.google/innovation-and-ai/technology/ai/rss/", source: "Google AI", category: "Research", limit: 6 },
   { url: "https://deepmind.google/blog/rss.xml", source: "Google DeepMind", category: "Research", limit: 6 },
   { url: "https://huggingface.co/blog/feed.xml", source: "Hugging Face", category: "OpenSource", limit: 8 },
   // ── 공식 기업/연구 블로그 (저작권 안전: 홍보 목적 배포 + 최신·고품질) ─────────────
@@ -124,14 +125,18 @@ export const FEEDS: FeedSource[] = [
   // MIT Tech Review 제거: 본문이 페이월이라 원문 링크를 눌러도 못 읽고(UX 저하),
   // 재사용 제약도 큰 매체. 연구 카테고리는 Google Research·BAIR 로 대체.
   { url: "https://venturebeat.com/category/ai/feed/", source: "VentureBeat", category: "LLM", limit: 8 },
-  { url: "https://arstechnica.com/ai/feed/", source: "Ars Technica", category: "LLM", limit: 8 },
+  // Ars Technica 제거: Cloudflare WAF 가 모든 자동화 요청(봇·브라우저 UA 무관)을 403으로 차단 — Vercel IP 차단으로 수집 불가.
   // 고신호 개인 블로그/뉴스레터 (AI 엔지니어들이 실제로 보는 곳)
   { url: "https://simonwillison.net/atom/everything/", source: "Simon Willison", category: "Tools", limit: 8 },
   { url: "https://www.latent.space/feed", source: "Latent Space", category: "Practice", limit: 6 },
+  // Import AI — Jack Clark(Anthropic 공동창업자) 주간 AI 리서치 뉴스레터. 무료·공개 배포, 저작권 제한 없음.
+  { url: "https://jack-clark.net/feed/", source: "Import AI", category: "Research", limit: 6 },
+  // Interconnects — Nathan Lambert(AI 연구자) Substack. 프론티어 모델·추론·에이전트 심층 분석. 71K+ 구독, 무료 공개.
+  { url: "https://www.interconnects.ai/feed", source: "Interconnects", category: "Research", limit: 6 },
 
   // ── 국내 기업 기술블로그 (종합 개발 피드 → aiOnly 로 AI 글만 수집) ──────
   // 실무 관점의 AI 적용 사례가 주력이라 fallback 은 Practice. 대부분 비-AI라 매 실행 0~2건 기여.
-  { url: "https://d2.naver.com/d2.atom", source: "네이버 D2", category: "Practice", aiOnly: true, limit: 15 },
+  // 네이버 D2 제거: Cloudflare 가 Vercel 데이터센터 IP 를 차단해 403 반환(UA 무관). 우아한형제들과 동일한 서버 IP 차단 패턴.
   { url: "https://tech.kakao.com/feed/", source: "카카오 기술블로그", category: "Practice", aiOnly: true, limit: 10 },
   // 우아한형제들(techblog.woowahan.com)은 Cloudflare 가 Vercel 데이터센터 IP 를 봇으로 막아 매번 403.
   // (가정용 IP 에선 봇 UA 로도 200 → UA 가 아니라 서버 IP 차단 이슈라 코드로 우회 불가) → 피드에서 제거.
