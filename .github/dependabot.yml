@@ -14,6 +14,13 @@ updates:
     open-pull-requests-limit: 5
     labels:
       - "dependencies"
+    # ESLint 10 메이저는 eslint-config-next(번들 eslint-plugin-react)가 아직 미지원이라
+    # lint 가 깨진다(ESLint 10 이 context.getFilename 제거 → 플러그인이 호출하다 TypeError).
+    # 지원될 때까지 메이저만 막고 마이너/패치(9.x)는 계속 받는다.
+    # eslint-config-next 가 ESLint 10 을 지원하면 이 ignore 를 지우고 eslint 와 함께 올린다.
+    ignore:
+      - dependency-name: "eslint"
+        update-types: ["version-update:semver-major"]
     commit-message:
       prefix: "chore(deps)"
       include: "scope"
