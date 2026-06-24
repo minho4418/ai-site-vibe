@@ -54,17 +54,18 @@ export const COURSES: Course[] = [
     free: true,
     tags: ["코딩", "수익화", "노코드"],
   },
-  {
-    title: "【한글자막】 No Code! 코딩없이 인공지능 구현하기",
-    platform: "Udemy",
-    url: "https://www.udemy.com/course/no-code-ai/",
-    category: "intro",
-    level: "입문",
-    free: false,
-    tags: ["노코드", "한글자막"],
-  },
 
   // ── LLM·에이전트 ──────────────────────────────────────
+  {
+    title: "LangGraph를 활용한 LLM Agent 개발 강의 (feat. MCP)",
+    platform: "인프런",
+    url: "https://www.inflearn.com/course/%EB%9E%AD%EA%B7%B8%EB%9E%98%ED%94%84-%ED%99%9C%EC%9A%A9%ED%95%9C-llm%EC%97%90%EC%9D%B4%EC%A0%84%ED%8A%B8-%EA%B0%9C%EB%B0%9C",
+    category: "llm",
+    level: "중급",
+    free: false,
+    tags: ["LangGraph", "에이전트", "MCP"],
+  },
+
   {
     title: "최고의 프롬프트 엔지니어링 (ft. 바이브 코딩)",
     platform: "패스트캠퍼스",
@@ -205,6 +206,15 @@ export const COURSES: Course[] = [
 
   // ── 데이터·ML ────────────────────────────────────────
   {
+    title: "혼자 공부하는 머신러닝+딥러닝 (박해선)",
+    platform: "인프런",
+    url: "https://www.inflearn.com/course/%ED%98%BC%EC%9E%90%EA%B3%B5%EB%B6%80-%EB%A8%B8%EC%8B%A0%EB%9F%AC%EB%8B%9D-%EB%94%A5%EB%9F%AC%EB%8B%9D",
+    category: "data",
+    level: "입문",
+    free: true,
+    tags: ["머신러닝", "딥러닝", "기초", "scikit-learn"],
+  },
+  {
     title: "모두를 위한 머신러닝/딥러닝 (김성훈)",
     platform: "공개강의",
     url: "https://hunkim.github.io/ml/",
@@ -225,7 +235,7 @@ export const COURSES: Course[] = [
   {
     title: "DeepLearning.AI Short Courses (Andrew Ng)",
     platform: "deeplearning.ai",
-    url: "https://www.deeplearning.ai/short-courses/",
+    url: "https://www.deeplearning.ai/courses",
     category: "data",
     level: "중급",
     free: true,
