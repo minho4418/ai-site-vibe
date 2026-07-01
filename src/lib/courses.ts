@@ -156,8 +156,26 @@ export const COURSES: Course[] = [
     free: false,
     tags: ["클로드코드", "Claude Code", "Codex", "에이전트"],
   },
+  {
+    title: "MCP와 A2A로 끝내는 상상도 못할 Multi-Agent 구축",
+    platform: "패스트캠퍼스",
+    url: "https://fastcampus.co.kr/data_online_mcpa2a",
+    category: "llm",
+    level: "중급",
+    free: false,
+    tags: ["MCP", "A2A", "멀티에이전트", "LangGraph"],
+  },
 
   // ── 이미지·영상 ───────────────────────────────────────
+  {
+    title: "일관성을 유지하는 AI 영상 제작 with Midjourney & Runway",
+    platform: "패스트캠퍼스",
+    url: "https://fastcampus.co.kr/data_online_keepkwan",
+    category: "media",
+    level: "입문",
+    free: false,
+    tags: ["미드저니", "Runway", "AI영상", "숏폼", "스토리보드"],
+  },
   {
     title: "왕초보를 위한 AI 디자인 바이블 (MJ·SD·Firefly)",
     platform: "패스트캠퍼스",
@@ -243,6 +261,24 @@ export const COURSES: Course[] = [
   },
 
   // ── 실무·활용 ────────────────────────────────────────
+  {
+    title: "코딩 없이 AI 자동화 전문가가 되는 법, n8n 완벽 가이드",
+    platform: "인프런",
+    url: "https://www.inflearn.com/course/ai-%EC%9E%90%EB%8F%99%ED%99%94-n8n",
+    category: "practice",
+    level: "입문",
+    free: false,
+    tags: ["n8n", "자동화", "노코드", "워크플로우", "AI에이전트"],
+  },
+  {
+    title: "AI로 코딩하는 시대! 비개발자도 할 수 있는 Cursor.AI 실전 웹 제작",
+    platform: "패스트캠퍼스",
+    url: "https://fastcampus.co.kr/data_online_cursor",
+    category: "practice",
+    level: "입문",
+    free: false,
+    tags: ["Cursor AI", "바이브코딩", "비개발자", "웹개발"],
+  },
   {
     title: "일잘러를 위한 700가지 ChatGPT 활용 바이블",
     platform: "패스트캠퍼스",
