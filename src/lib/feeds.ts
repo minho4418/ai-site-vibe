@@ -124,7 +124,9 @@ export const FEEDS: FeedSource[] = [
   },
   // MIT Tech Review 제거: 본문이 페이월이라 원문 링크를 눌러도 못 읽고(UX 저하),
   // 재사용 제약도 큰 매체. 연구 카테고리는 Google Research·BAIR 로 대체.
-  { url: "https://venturebeat.com/category/ai/feed/", source: "VentureBeat", category: "LLM", limit: 8 },
+  // VentureBeat AI 카테고리 피드(venturebeat.com/category/ai/feed/)는 2026-05 이후 업데이트 멈춤(stale) →
+  // 메인 피드 + aiOnly 로 전환. VentureBeat 는 광범위한 엔터프라이즈/AI 매체라 aiOnly 필터가 적합하다.
+  { url: "https://venturebeat.com/feed/", source: "VentureBeat", category: "LLM", aiOnly: true, limit: 8 },
   // Ars Technica 제거: Cloudflare WAF 가 모든 자동화 요청(봇·브라우저 UA 무관)을 403으로 차단 — Vercel IP 차단으로 수집 불가.
   // 고신호 개인 블로그/뉴스레터 (AI 엔지니어들이 실제로 보는 곳)
   { url: "https://simonwillison.net/atom/everything/", source: "Simon Willison", category: "Tools", limit: 8 },
@@ -133,6 +135,9 @@ export const FEEDS: FeedSource[] = [
   { url: "https://jack-clark.net/feed/", source: "Import AI", category: "Research", limit: 6 },
   // Interconnects — Nathan Lambert(AI 연구자) Substack. 프론티어 모델·추론·에이전트 심층 분석. 71K+ 구독, 무료 공개.
   { url: "https://www.interconnects.ai/feed", source: "Interconnects", category: "Research", limit: 6 },
+  // Mistral AI 공식 블로그. 오픈웨이트·클로즈드 모델 모두 출시하는 프론티어 랩. 홍보 목적 자발적 배포 → 저작권 안전.
+  // RSS 2026-07-02 기준 활성(leanstral-1.5, OCR 4 등). URL: https://mistral.ai/rss.xml (공식 확인).
+  { url: "https://mistral.ai/rss.xml", source: "Mistral AI", category: "LLM", limit: 6 },
 
   // ── 국내 기업 기술블로그 (종합 개발 피드 → aiOnly 로 AI 글만 수집) ──────
   // 실무 관점의 AI 적용 사례가 주력이라 fallback 은 Practice. 대부분 비-AI라 매 실행 0~2건 기여.
