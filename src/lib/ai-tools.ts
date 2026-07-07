@@ -43,7 +43,6 @@ export const CATEGORIES: Category[] = [
     seeds: [
       "cline/cline",
       "Aider-AI/aider",
-      "continuedev/continue",
       "OpenHands/OpenHands",
       "aaif-goose/goose",
       "TabbyML/tabby",
@@ -51,7 +50,7 @@ export const CATEGORIES: Category[] = [
       "google-gemini/gemini-cli",
       "anthropics/claude-code",
       "stackblitz/bolt.new",
-      "Pythagora-io/gpt-pilot",
+      "sst/opencode",
       "plandex-ai/plandex",
       "kilo-org/kilocode",
       "manaflow-ai/cmux",
