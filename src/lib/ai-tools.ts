@@ -50,7 +50,7 @@ export const CATEGORIES: Category[] = [
       "google-gemini/gemini-cli",
       "anthropics/claude-code",
       "stackblitz/bolt.new",
-      "sst/opencode",
+      "opencode-ai/opencode",
       "plandex-ai/plandex",
       "kilo-org/kilocode",
       "manaflow-ai/cmux",
