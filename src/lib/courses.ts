@@ -165,6 +165,15 @@ export const COURSES: Course[] = [
     free: false,
     tags: ["MCP", "A2A", "멀티에이전트", "LangGraph"],
   },
+  {
+    title: "AI Agent 바이블: n8n부터 LangGraph까지, 멀티 에이전트의 모든 것",
+    platform: "패스트캠퍼스",
+    url: "https://fastcampus.co.kr/data_online_aiagentbible",
+    category: "llm",
+    level: "고급",
+    free: false,
+    tags: ["n8n", "LangGraph", "OpenAI", "멀티에이전트", "RAG", "에이전트"],
+  },
 
   // ── 이미지·영상 ───────────────────────────────────────
   {
@@ -269,15 +278,6 @@ export const COURSES: Course[] = [
     level: "입문",
     free: false,
     tags: ["n8n", "자동화", "노코드", "워크플로우", "AI에이전트"],
-  },
-  {
-    title: "AI로 코딩하는 시대! 비개발자도 할 수 있는 Cursor.AI 실전 웹 제작",
-    platform: "패스트캠퍼스",
-    url: "https://fastcampus.co.kr/data_online_cursor",
-    category: "practice",
-    level: "입문",
-    free: false,
-    tags: ["Cursor AI", "바이브코딩", "비개발자", "웹개발"],
   },
   {
     title: "일잘러를 위한 700가지 ChatGPT 활용 바이블",
