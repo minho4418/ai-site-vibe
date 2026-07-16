@@ -57,6 +57,33 @@ export const COURSES: Course[] = [
 
   // ── LLM·에이전트 ──────────────────────────────────────
   {
+    title: "AI Agent + MCP 초자동화로 앞서나가기",
+    platform: "코딩애플",
+    url: "https://codingapple.com/course/ai-agent-mcp/",
+    category: "llm",
+    level: "입문",
+    free: false,
+    tags: ["AI에이전트", "MCP", "자동화", "노코드"],
+  },
+  {
+    title: "Agentic AI — 에이전트 설계 4대 패턴 (Andrew Ng)",
+    platform: "deeplearning.ai",
+    url: "https://www.deeplearning.ai/courses/agentic-ai/",
+    category: "llm",
+    level: "중급",
+    free: true,
+    tags: ["에이전트", "멀티에이전트", "Andrew Ng", "영어"],
+  },
+  {
+    title: "MCP로 엔터프라이즈 환경에서 AI Agent 활용 및 제어",
+    platform: "패스트캠퍼스",
+    url: "https://fastcampus.co.kr/data_online_mcp",
+    category: "llm",
+    level: "중급",
+    free: false,
+    tags: ["MCP", "에이전트", "엔터프라이즈"],
+  },
+  {
     title: "LangGraph를 활용한 LLM Agent 개발 강의 (feat. MCP)",
     platform: "인프런",
     url: "https://www.inflearn.com/course/%EB%9E%AD%EA%B7%B8%EB%9E%98%ED%94%84-%ED%99%9C%EC%9A%A9%ED%95%9C-llm%EC%97%90%EC%9D%B4%EC%A0%84%ED%8A%B8-%EA%B0%9C%EB%B0%9C",
