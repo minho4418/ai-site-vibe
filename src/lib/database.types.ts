@@ -120,6 +120,27 @@ export type Database = {
         };
         Relationships: [];
       };
+      repo_star_snapshots: {
+        Row: {
+          repo: string;
+          snapshot_date: string;
+          stars: number;
+          created_at: string;
+        };
+        Insert: {
+          repo: string;
+          snapshot_date: string;
+          stars: number;
+          created_at?: string;
+        };
+        Update: {
+          repo?: string;
+          snapshot_date?: string;
+          stars?: number;
+          created_at?: string;
+        };
+        Relationships: [];
+      };
     };
     Views: Record<string, never>;
     Functions: {

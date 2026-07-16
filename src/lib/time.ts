@@ -1,3 +1,15 @@
+// KST(UTC+9) 기준 "YYYY-MM-DD". 별 수 스냅샷의 날짜 키 등 '한국 기준 오늘' 판정용.
+// now 를 기본 인자로 받아 직접 Date.now() 호출(impure)을 피한다 — timeAgo 와 동일 패턴.
+const KST_OFFSET_MS = 9 * 60 * 60 * 1000;
+export function kstDateString(now: number = Date.now()): string {
+  return new Date(now + KST_OFFSET_MS).toISOString().slice(0, 10);
+}
+
+// "YYYY-MM-DD" 두 날짜의 차이(일). a - b. 스냅샷 경과일 계산용.
+export function daysBetween(a: string, b: string): number {
+  return Math.round((Date.parse(a) - Date.parse(b)) / 86_400_000);
+}
+
 // 발행 후 windowMs 이내인지(= "방금 들어온" 글인지). 🆕NEW 배지 판정용.
 // now 를 기본 인자로 받아 렌더 중 직접 Date.now() 호출(impure)을 피한다 — timeAgo 와 동일 패턴.
 export function isFresh(iso: string, windowMs: number, now: number = Date.now()): boolean {

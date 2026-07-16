@@ -76,8 +76,9 @@ export function RankingClient({ ranking }: { ranking: Ranking }) {
 
         {tab === "weekly" && !ranking.weeklyAvailable ? (
           <p className="rounded-xl border border-amber-300/60 bg-amber-50 px-4 py-3 text-sm text-amber-900 dark:border-amber-500/30 dark:bg-amber-500/10 dark:text-amber-200">
-            🔥 주간 상승은 <code className="font-mono text-xs">GITHUB_TOKEN</code> 환경변수가 설정돼 있을 때
-            표시됩니다. (stargazers 집계에 인증이 필요)
+            🔥 주간 상승은 매일 오전 8시에 저장하는 별 수 스냅샷의 날짜 간 차이로 계산해요. 아직
+            비교할 스냅샷이 쌓이지 않았어요 — 내일부터 표시되고, 7일이 지나면 완전한 주간 수치가
+            됩니다.
           </p>
         ) : rows.length === 0 ? (
           <p className="rounded-2xl border border-zinc-900/10 bg-white/60 px-4 py-6 text-center text-sm text-zinc-500 dark:border-white/10 dark:bg-white/[0.04] dark:text-zinc-400">
@@ -129,8 +130,10 @@ export function RankingClient({ ranking }: { ranking: Ranking }) {
                       {isWeekly && t.weeklyStars !== null ? (
                         <span className="font-bold tabular-nums text-emerald-600 dark:text-emerald-400">
                           ▲ {t.weeklyStars.toLocaleString()}
-                          {t.weeklyCapped ? "+" : ""}
-                          <span className="text-[11px] font-medium text-zinc-400"> /주</span>
+                          <span className="text-[11px] font-medium text-zinc-400">
+                            {/* 스냅샷이 7일 미만이면 실제 경과일을 밝힌다(과대 해석 방지) */}
+                            {t.weeklyDays !== null && t.weeklyDays < 7 ? ` /${t.weeklyDays}일` : " /주"}
+                          </span>
                         </span>
                       ) : (
                         <span className="font-bold tabular-nums text-zinc-800 dark:text-zinc-100">

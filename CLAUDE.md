@@ -32,6 +32,7 @@ src/
 │   ├── ranking/, education/          # GitHub ⭐ 랭킹(getRanking, ISR 1h) / 교육(코스 시드)
 │   ├── api/cron/ingest/route.ts      # RSS 수집·dedup·요약 (Bearer CRON_SECRET)
 │   ├── api/cron/cleanup/route.ts     # 30일 지난 비북마크 기사 삭제
+│   ├── api/cron/star-snapshot/route.ts  # 랭킹 후보 풀 별 수 일일 스냅샷(주간 상승 계산용, 35일 보관)
 │   ├── api/briefing/route.ts         # 브리핑 발행 (Bearer BRIEFING_TOKEN) → Threads 게시
 │   ├── api/article-summary/route.ts  # 기사 본문 온디맨드 요약
 │   ├── sitemap.ts, robots.ts, feed.xml/, opengraph-image.tsx, apple-icon.tsx
@@ -63,7 +64,7 @@ src/
    - Vercel Hobby cron은 best-effort라 조용히 스킵되는 사고가 있어 **트리거를 GitHub Actions로 이전**함. 인증은 `CRON_SECRET`.
 2. **브리핑 파이프라인**: 클라우드 "데일리 브리핑" 루틴이 egress 제약으로 사이트에 직접 POST 못 함 → `publish-briefing.yml`을 dispatch → Actions 러너가 `/api/briefing`(`BRIEFING_TOKEN`)로 발행 → `daily_briefings` 저장 → 홈 히어로/Threads 노출.
 3. **표출**: 홈은 서버컴포넌트가 최신 80건 조회(`capPerSource`로 소스당 최대 5건), `HomeClient`가 필터/검색/다크모드 담당.
-4. **랭킹**: `/ranking` 은 DB 가 아닌 GitHub 지표를 직접 조회(`getRanking`, ISR 1시간). "GitHub 검색(별순) ∩ awesome-list 멤버십" 교집합으로 skills/agents/mcp 카테고리를 만든다 — 사람 큐레이션 리스트가 스팸·무관 repo 를 거른다.
+4. **랭킹**: `/ranking` 은 GitHub 지표를 직접 조회(`getRanking`, ISR 1시간). "GitHub 검색(별순) ∩ awesome-list 멤버십" 교집합으로 skills/agents/mcp 카테고리를 만든다 — 사람 큐레이션 리스트가 스팸·무관 repo 를 거른다. **주간 상승**은 GitHub 이 stargazers 목록 API 를 막아서(2026-06-30, 관리자·협력자 전용) `repo_star_snapshots` 테이블의 일일 별 수 스냅샷 차이("오늘 − 최대 7일 전")로 계산한다 — 스냅샷은 ingest 워크플로가 `/api/cron/star-snapshot` 을 매일 호출해 쌓는다.
 5. **교육**: `/education` 은 `courses.ts` 의 직접 큐레이션 시드(메타데이터만 저장, 카드는 원본으로 링크아웃).
 
 ## 카테고리 (8개)

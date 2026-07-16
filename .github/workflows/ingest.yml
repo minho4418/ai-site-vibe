@@ -43,3 +43,20 @@ jobs:
           cat resp.json || true
           echo
           test "${code}" = "200"
+
+      # 랭킹 후보 풀의 오늘 별 수 스냅샷(주간 상승 = 스냅샷 날짜 간 차이).
+      # ingest 가 실패해도 스냅샷은 독립적으로 시도한다(if: always) — 하루 빠지면
+      # 주간 상승 정확도가 떨어지므로.
+      - name: Snapshot ranking stars
+        if: always()
+        env:
+          CRON_SECRET: ${{ secrets.CRON_SECRET }}
+        run: |
+          set -euo pipefail
+          code=$(curl -sS --max-time 120 -o snap.json -w '%{http_code}' \
+            -H "Authorization: Bearer ${CRON_SECRET}" \
+            https://knewittoday.com/api/cron/star-snapshot)
+          echo "HTTP ${code}"
+          cat snap.json || true
+          echo
+          test "${code}" = "200"
