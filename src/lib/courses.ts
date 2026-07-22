@@ -57,6 +57,24 @@ export const COURSES: Course[] = [
 
   // ── LLM·에이전트 ──────────────────────────────────────
   {
+    title: "ChatGPT Prompt Engineering for Developers (Isa Fulford · Andrew Ng)",
+    platform: "deeplearning.ai",
+    url: "https://www.deeplearning.ai/short-courses/chatgpt-prompt-engineering-for-developers",
+    category: "llm",
+    level: "입문",
+    free: true,
+    tags: ["프롬프트", "ChatGPT", "OpenAI", "Andrew Ng", "영어"],
+  },
+  {
+    title: "AI Agents in LangGraph (Harrison Chase · Rotem Weiss)",
+    platform: "deeplearning.ai",
+    url: "https://www.deeplearning.ai/courses/ai-agents-in-langgraph",
+    category: "llm",
+    level: "중급",
+    free: true,
+    tags: ["LangGraph", "에이전트", "LangChain", "Tavily", "영어"],
+  },
+  {
     title: "AI Agent + MCP 초자동화로 앞서나가기",
     platform: "코딩애플",
     url: "https://codingapple.com/course/ai-agent-mcp/",
@@ -204,6 +222,15 @@ export const COURSES: Course[] = [
 
   // ── 이미지·영상 ───────────────────────────────────────
   {
+    title: "AI로 완성하는 5가지 감도높은 광고 제작: 이미지·음악·영상·편집까지",
+    platform: "패스트캠퍼스",
+    url: "https://fastcampus.co.kr/dgn_online_aiads",
+    category: "media",
+    level: "중급",
+    free: false,
+    tags: ["AI광고", "AI영상", "이미지생성", "음악생성", "콘텐츠"],
+  },
+  {
     title: "일관성을 유지하는 AI 영상 제작 with Midjourney & Runway",
     platform: "패스트캠퍼스",
     url: "https://fastcampus.co.kr/data_online_keepkwan",
@@ -260,6 +287,15 @@ export const COURSES: Course[] = [
 
   // ── 데이터·ML ────────────────────────────────────────
   {
+    title: "Practical Deep Learning for Coders (Jeremy Howard / fast.ai)",
+    platform: "fast.ai",
+    url: "https://course.fast.ai/",
+    category: "data",
+    level: "입문",
+    free: true,
+    tags: ["딥러닝", "PyTorch", "fastai", "영어", "Kaggle"],
+  },
+  {
     title: "혼자 공부하는 머신러닝+딥러닝 (박해선)",
     platform: "인프런",
     url: "https://www.inflearn.com/course/%ED%98%BC%EC%9E%90%EA%B3%B5%EB%B6%80-%EB%A8%B8%EC%8B%A0%EB%9F%AC%EB%8B%9D-%EB%94%A5%EB%9F%AC%EB%8B%9D",
@@ -297,6 +333,15 @@ export const COURSES: Course[] = [
   },
 
   // ── 실무·활용 ────────────────────────────────────────
+  {
+    title: "실리콘밸리 바이브코딩: 상위 1% 개발자의 10가지 스킬 with Claude Code & Codex",
+    platform: "패스트캠퍼스",
+    url: "https://fastcampus.co.kr/data_online_svvibecoding",
+    category: "practice",
+    level: "고급",
+    free: false,
+    tags: ["바이브코딩", "Claude Code", "Codex", "SaaS", "풀스택"],
+  },
   {
     title: "코딩 없이 AI 자동화 전문가가 되는 법, n8n 완벽 가이드",
     platform: "인프런",
