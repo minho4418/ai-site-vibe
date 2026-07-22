@@ -140,12 +140,16 @@ export const FEEDS: FeedSource[] = [
   { url: "https://mistral.ai/rss.xml", source: "Mistral AI", category: "LLM", limit: 6 },
   // PyTorch 공식 블로그. Meta 지원 오픈소스 ML 프레임워크. 릴리스 노트·최적화 기법·분산 학습 기술 등.
   // 홍보 목적 공개 배포 → 저작권 안전. 2026-07-10 기준 활성(PyTorch 2.13 릴리스 등).
-  { url: "https://pytorch.org/blog/feed.xml", source: "PyTorch Blog", category: "OpenSource", limit: 6 },
+  { url: "https://pytorch.org/blog/feed/", source: "PyTorch Blog", category: "OpenSource", limit: 6 },
   // Lilian Weng 블로그. 前 OpenAI 리서치 VP. 프론티어 AI 연구 심층 분석(RL, 에이전트, 환각 등). 2026-07-04 활성.
   { url: "https://lilianweng.github.io/index.xml", source: "Lil'Log (Lilian Weng)", category: "Research", limit: 4 },
   // NVIDIA Technical Blog. 개발자·데이터사이언티스트·IT관리자용 공식 기술 블로그. 모델 추론·CUDA 최적화·NIM 마이크로서비스 등.
   // blogs.nvidia.com(기업 블로그)와 별개 채널. aiOnly 로 비-AI 게시물(양자컴퓨팅 등) 필터링. 2026-07-13 기준 100건+ 활성.
   { url: "https://developer.nvidia.com/blog/feed/", source: "NVIDIA Technical Blog", category: "Practice", aiOnly: true, limit: 6 },
+  // The New Stack — DevOps·Cloud Native·AI 엔지니어링 전문 매체. 모델 비용·추론 아키텍처·에이전트 플랫폼 등
+  // 실무 AI 분석이 풍부하고 비-AI(Spark, 코드리뷰 등) 글도 섞임 → aiOnly 필터. Cloudflare 사용하나
+  // knewit UA(Mozilla/5.0 compatible; knewit-feedcheck/1.0) 허용 확인(2026-07-20).
+  { url: "https://thenewstack.io/blog/feed/", source: "The New Stack", category: "Practice", aiOnly: true, limit: 8 },
 
   // ── 국내 기업 기술블로그 (종합 개발 피드 → aiOnly 로 AI 글만 수집) ──────
   // 실무 관점의 AI 적용 사례가 주력이라 fallback 은 Practice. 대부분 비-AI라 매 실행 0~2건 기여.
